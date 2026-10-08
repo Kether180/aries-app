@@ -60,6 +60,10 @@ class SentimentStats(BaseModel):
     average_score: float | None
 
 
+class TopicStats(SentimentStats):
+    topic: str  # the search that surfaced the articles
+
+
 class NewsSearchResult(NewsArticle):
     # The stored analysis when this article was already analysed, so the UI can show it
     # straight away instead of calling OpenAI again
@@ -68,6 +72,7 @@ class NewsSearchResult(NewsArticle):
 
 class NewsSearchResponse(BaseModel):
     query: str | None
+    country: str | None = None
     total: int
     articles: list[NewsSearchResult]
 

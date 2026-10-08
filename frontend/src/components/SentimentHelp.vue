@@ -1,5 +1,21 @@
+<script setup lang="ts">
+import { onMounted, onUnmounted, ref } from 'vue'
+
+const box = ref<HTMLDetailsElement | null>(null)
+
+// Badges anywhere on the page dispatch this event; open the note and bring it into view
+function open() {
+  if (!box.value) return
+  box.value.open = true
+  box.value.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+}
+
+onMounted(() => window.addEventListener('sentiment-help', open))
+onUnmounted(() => window.removeEventListener('sentiment-help', open))
+</script>
+
 <template>
-  <details class="help">
+  <details ref="box" class="help">
     <summary>What do the labels mean?</summary>
     <p>
       Each label answers one question: is this good or bad news for the people and organisations the article is about?
@@ -20,7 +36,8 @@
     </ul>
     <p>
       It is about what happened, not how the article is written. "Strongly" or "slightly" says how clear it is, and the
-      small bar in each badge shows the same. Every article also has a one-line reason under its summary.
+      small bar in each badge shows the same. Every article also has a one-line reason under its summary. Tap any badge
+      to come back here.
     </p>
   </details>
 </template>

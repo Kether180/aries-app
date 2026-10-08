@@ -46,13 +46,14 @@ On the first request after a deploy, free hosting tiers can take 30 to 60 second
 
 1. The page opens on top headlines. You should see about 10 article cards with source, time and description.
 2. Click the **Climate** chip. The URL changes to `/?q=Climate` and the cards reload. The chip is highlighted.
+   Change the country selector to **Germany**: the URL gains `&country=de` and the results come from German outlets.
 3. On one card click **Summarise & score**. The button shows "Analysing..." for 1 to 3 seconds, then the card shows:
    - an "AI summary" block with 2 to 3 sentences
    - a badge in words: Positive, Neutral or Negative, with "Strongly" or "Slightly" when the tone is clear or faint, and a small bar showing the same thing (hover it for the exact score)
    - one sentence starting "Why positive:" (or neutral, negative) explaining the label
 4. The box above the cards now says "1/10 analysed" and shows a sentiment bar. Click **What do the labels mean?** under it for a plain-language explanation.
 5. Click **Analyse all**. The remaining cards analyse three at a time. When done, the box says "10/10 analysed" and the bar shows the split, for example "6 neutral (60%), 4 negative (40%)".
-6. Click **6 neutral** in the legend. Only neutral cards remain, the other bar segments dim, and a **Show all** link appears. Click it to reset.
+6. Click **Neutral** in the switch under the bar (or **6 neutral** in the legend). Only neutral cards remain and the other bar segments dim. Click **All** to reset. Tap any badge: the "What do the labels mean?" note opens.
 7. Reload the page. All cards still show their analysis (loaded from the database) and no new OpenAI calls are made.
 8. Search for a nonsense word such as `qwzxv`. Expected: "No articles found. Try a broader search."
 
@@ -69,7 +70,7 @@ On the first request after a deploy, free hosting tiers can take 30 to 60 second
 
 ### Library page
 
-1. Click **Library**. The articles analysed so far are listed newest first. The box at the top shows the count, the average score and a sentiment bar.
+1. Click **Library**. The articles analysed so far are listed newest first. The box at the top shows the count, the average score and a sentiment bar. If you have analysed more than one topic, a **Mood by topic** panel shows one bar per topic; clicking one filters the list.
 2. Click **Negative** in the filter. Only negative articles remain and the count updates. Click **All** to reset.
 3. Type part of a title in the filter box. The list narrows as you type.
 4. In **Ask your library**, click the suggestion "What is the overall mood of the news?". Expected: an answer with citation chips and a source list, within a few seconds. **Ask another question** brings the suggestions back.

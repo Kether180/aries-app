@@ -30,6 +30,7 @@ export interface NewsSearchResult extends NewsArticle {
 
 export interface NewsSearchResponse {
   query: string | null
+  country: string | null
   total: number
   articles: NewsSearchResult[]
 }
@@ -45,6 +46,10 @@ export interface SentimentStats {
   neutral: number
   negative: number
   average_score: number | null
+}
+
+export interface TopicStats extends SentimentStats {
+  topic: string
 }
 
 export interface AskResponse {

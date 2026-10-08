@@ -19,8 +19,8 @@ import { RouterLink, RouterView } from 'vue-router'
           />
           <defs>
             <linearGradient id="brand-gradient" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stop-color="#5b5bd6" />
-              <stop offset="1" stop-color="#8b5cf6" />
+              <stop offset="0" stop-color="#0f7f73" />
+              <stop offset="1" stop-color="#3fcbb0" />
             </linearGradient>
           </defs>
         </svg>

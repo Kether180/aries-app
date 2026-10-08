@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.db import get_db
 from app.models import Article
-from app.schemas import ArticleCreate, ArticleList, ArticleRead, ErrorResponse, Sentiment, SentimentStats
+from app.schemas import ArticleCreate, ArticleList, ArticleRead, ErrorResponse, Sentiment, SentimentStats, TopicStats
 from app.services import articles as article_service
 from app.services.ai import analyze_article
 
@@ -64,6 +64,11 @@ def list_articles(
 @router.get("/stats", response_model=SentimentStats, summary="Sentiment breakdown of all analysed articles")
 def article_stats(db: Session = Depends(get_db)):
     return article_service.stats(db)
+
+
+@router.get("/topics", response_model=list[TopicStats], summary="Sentiment breakdown per search topic")
+def topic_stats(db: Session = Depends(get_db)):
+    return article_service.stats_by_topic(db)
 
 
 @router.get("/{article_id}", response_model=ArticleRead, responses=NOT_FOUND, summary="Get one analysed article")

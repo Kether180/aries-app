@@ -20,9 +20,14 @@ RETRY_AFTER_SECONDS = 1.2
 _cache: dict[tuple, tuple[float, list[NewsArticle]]] = {}
 
 
-def fetch_news(query: str | None, lang: str = "en", max_results: int = 10) -> list[NewsArticle]:
-    """Search articles for `query`, or return top headlines when no query is given."""
-    key = (query, lang, max_results)
+def fetch_news(
+    query: str | None, lang: str = "en", max_results: int = 10, country: str | None = None
+) -> list[NewsArticle]:
+    """Search articles for `query`, or return top headlines when no query is given.
+
+    `country` narrows results to one country's press (GNews two-letter codes, e.g. "us", "gb", "de").
+    """
+    key = (query, lang, max_results, country)
     cached = _cache.get(key)
     if cached and time.monotonic() - cached[0] < settings.news_cache_seconds:
         return cached[1]
@@ -31,6 +36,8 @@ def fetch_news(query: str | None, lang: str = "en", max_results: int = 10) -> li
         raise UpstreamError("gnews", "GNEWS_API_KEY is not configured", 503)
 
     params = {"lang": lang, "max": max_results, "apikey": settings.gnews_api_key}
+    if country:
+        params["country"] = country
     if query:
         endpoint = "search"
         params["q"] = query

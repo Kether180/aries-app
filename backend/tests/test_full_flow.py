@@ -100,7 +100,9 @@ def run_flow(client, query: str, max_results: int) -> None:
 
 def test_full_flow_mocked(client, monkeypatch):
     monkeypatch.setattr(news_module.settings, "gnews_api_key", "test-key")
-    monkeypatch.setattr(news_router, "fetch_news", lambda q, lang="en", max_results=10: FAKE_NEWS[:max_results])
+    monkeypatch.setattr(
+        news_router, "fetch_news", lambda q, lang="en", max_results=10, country=None: FAKE_NEWS[:max_results]
+    )
     monkeypatch.setattr(agent_module, "fetch_news", lambda q, max_results=5: FAKE_NEWS)
 
     monkeypatch.setattr(

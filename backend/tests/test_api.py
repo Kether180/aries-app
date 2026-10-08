@@ -72,6 +72,47 @@ def test_list_filters_and_stats(client, monkeypatch):
     assert stats == {"total": 3, "positive": 1, "neutral": 0, "negative": 2, "average_score": -0.17}
 
 
+def test_topic_stats_groups_by_search(client, monkeypatch):
+    sentiments = iter(["positive", "negative", "neutral", "negative"])
+
+    def fake(article):
+        s = next(sentiments)
+        return Analysis(
+            summary="s",
+            sentiment=s,
+            sentiment_score={"positive": 0.6, "neutral": 0.0, "negative": -0.6}[s],
+            sentiment_reason="r",
+        )
+
+    monkeypatch.setattr(articles_router, "analyze_article", fake)
+    for i, topic in enumerate(["climate", "climate", "ai", None]):
+        client.post("/api/articles", json={"url": f"https://example.com/{i}", "title": f"Story {i}", "query": topic})
+
+    topics = client.get("/api/articles/topics").json()
+    assert [t["topic"] for t in topics] == ["climate", "ai"]  # untagged article skipped, biggest topic first
+    assert topics[0] == {
+        "topic": "climate",
+        "total": 2,
+        "positive": 1,
+        "neutral": 0,
+        "negative": 1,
+        "average_score": 0.0,
+    }
+
+
+def test_news_country_param_is_passed_through(client, fake_ai, monkeypatch):
+    seen = {}
+
+    def fake_fetch(q, lang, max_results, country=None):
+        seen["country"] = country
+        return []
+
+    monkeypatch.setattr(news_router, "fetch_news", fake_fetch)
+    assert client.get("/api/news", params={"q": "x", "country": "DE"}).json()["country"] == "de"
+    assert seen["country"] == "de"
+    assert client.get("/api/news", params={"country": "deu"}).status_code == 422
+
+
 def test_delete_article(client, fake_ai):
     article_id = client.post("/api/articles", json=ARTICLE).json()["id"]
     assert client.delete(f"/api/articles/{article_id}").status_code == 204
@@ -99,7 +140,7 @@ def test_upstream_error_returns_502(client, monkeypatch):
 def test_news_search_marks_analysed_articles(client, fake_ai, monkeypatch):
     stored_id = client.post("/api/articles", json=ARTICLE).json()["id"]
     results = [NewsArticle(url=ARTICLE["url"], title="a"), NewsArticle(url="https://example.com/new", title="b")]
-    monkeypatch.setattr(news_router, "fetch_news", lambda q, lang, max_results: results)
+    monkeypatch.setattr(news_router, "fetch_news", lambda q, lang, max_results, country=None: results)
 
     body = client.get("/api/news", params={"q": "sports"}).json()
     assert body["query"] == "sports"

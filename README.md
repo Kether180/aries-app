@@ -52,9 +52,9 @@ Open http://localhost:8000. Migrations run on start. For a local Postgres: `dock
 ## What the app does
 
 **Discover** (`/`)
-- Opens on top headlines. Search any topic or pick a suggestion.
+- Opens on top headlines. Search any topic or pick a suggestion, worldwide or in one country (GNews country filter).
 - "Summarise & score" per article, or "Analyse all" for the page.
-- A bar shows how coverage of the current search leans. Click a legend entry to filter the cards.
+- A bar shows how coverage of the current search leans, with a switch to show only positive, neutral or negative stories.
 - Already-analysed articles show their stored result; nothing is sent to OpenAI twice.
 - The search is in the URL (`/?q=climate`), so it can be shared.
 
@@ -65,6 +65,7 @@ Open http://localhost:8000. Migrations run on start. For a local Postgres: `dock
 
 **Library** (`/library`)
 - Everything analysed, newest first, with counts per sentiment and the average score.
+- "Mood by topic": one bar per search topic, from what has been analysed. Click one to see its articles.
 - Filter by sentiment or text. Delete entries.
 - "Ask your library" answers questions from stored articles only, with sources cited.
 
@@ -157,10 +158,11 @@ sequenceDiagram
 
 | Method | Path | What it does |
 | --- | --- | --- |
-| GET | `/api/news` | Search GNews (`q`, `lang`, `max`). No `q` = top headlines. Results already stored include their `analysis`. |
+| GET | `/api/news` | Search GNews (`q`, `lang`, `max`, `country`). No `q` = top headlines. Results already stored include their `analysis`. |
 | POST | `/api/articles` | Analyse and store an article. 201, or 200 with the stored record if the URL was analysed before. |
 | GET | `/api/articles` | List stored analyses. Filters `sentiment`, `q`; paging `limit`, `offset`. |
 | GET | `/api/articles/stats` | Counts per sentiment and average score. |
+| GET | `/api/articles/topics` | The same split per search topic, most analysed first. |
 | GET | `/api/articles/{id}` | One stored analysis. |
 | DELETE | `/api/articles/{id}` | Delete. 204. |
 | POST | `/api/ask` | Answer from stored articles (RAG): answer, sources, which were cited, how they were chosen. |

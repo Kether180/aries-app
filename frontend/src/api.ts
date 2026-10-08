@@ -8,6 +8,7 @@ import type {
   NewsSearchResponse,
   Sentiment,
   SentimentStats,
+  TopicStats,
 } from './types'
 
 export class ApiError extends Error {
@@ -43,7 +44,7 @@ function query(params: Record<string, string | number | null | undefined>): stri
 }
 
 export const api = {
-  searchNews: (q?: string) => request<NewsSearchResponse>(`/api/news${query({ q })}`),
+  searchNews: (q?: string, country?: string) => request<NewsSearchResponse>(`/api/news${query({ q, country })}`),
 
   analyzeArticle: (article: NewsArticle, searchQuery: string | null) =>
     request<Article>('/api/articles', {
@@ -55,6 +56,8 @@ export const api = {
     request<ArticleList>(`/api/articles${query(params)}`),
 
   getStats: () => request<SentimentStats>('/api/articles/stats'),
+
+  getTopicStats: () => request<TopicStats[]>('/api/articles/topics'),
 
   deleteArticle: (id: number) => request<void>(`/api/articles/${id}`, { method: 'DELETE' }),
 

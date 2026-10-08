@@ -26,6 +26,11 @@ const title = computed(() => {
   return props.score === undefined ? meaning : `${meaning} (score ${formatScore(props.score)}, from -1 to +1)`
 })
 
+// Tapping a badge opens the "What do the labels mean?" note on the page (there is no hover on phones)
+function explain() {
+  window.dispatchEvent(new CustomEvent('sentiment-help'))
+}
+
 // Small meter: the fill starts at the centre and extends towards the score's side
 const meter = computed(() => {
   const s = props.score ?? 0
@@ -35,11 +40,11 @@ const meter = computed(() => {
 </script>
 
 <template>
-  <span class="badge" :class="sentiment" :title="title">
+  <button type="button" class="badge" :class="sentiment" :title="title" @click="explain">
     <span class="dot" aria-hidden="true" />
     <span class="label">{{ label }}</span>
     <span v-if="score !== undefined" class="meter" aria-hidden="true"><span class="fill" :style="meter" /></span>
-  </span>
+  </button>
 </template>
 
 <style scoped>
@@ -49,7 +54,10 @@ const meter = computed(() => {
   gap: 7px;
   height: 26px;
   padding: 0 10px 0 8px;
+  border: none;
   border-radius: 999px;
+  box-shadow: none;
+  cursor: help;
   font-size: 0.78rem;
   font-weight: 600;
   color: var(--tone);

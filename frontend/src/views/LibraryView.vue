@@ -4,6 +4,7 @@ import { onMounted, ref, watch } from 'vue'
 import { api } from '@/api'
 import ArticleCard from '@/components/ArticleCard.vue'
 import AskPanel from '@/components/AskPanel.vue'
+import TopicMood from '@/components/TopicMood.vue'
 import SentimentBar from '@/components/SentimentBar.vue'
 import SentimentHelp from '@/components/SentimentHelp.vue'
 import { formatScore } from '@/format'
@@ -101,6 +102,8 @@ onMounted(() => {
       <SentimentHelp />
     </div>
   </section>
+
+  <TopicMood v-if="stats && stats.total" @select="q = $event" />
 
   <AskPanel v-if="stats && stats.total" />
 

@@ -10,10 +10,34 @@ import type { NewsSearchResult, Sentiment } from '@/types'
 
 const TOPICS = ['Artificial intelligence', 'Climate', 'Stock market', 'Elections', 'Space', 'Health']
 
+// GNews country codes; '' means worldwide
+const COUNTRIES = [
+  ['', 'Worldwide'],
+  ['us', 'United States'],
+  ['gb', 'United Kingdom'],
+  ['de', 'Germany'],
+  ['fr', 'France'],
+  ['es', 'Spain'],
+  ['it', 'Italy'],
+  ['nl', 'Netherlands'],
+  ['in', 'India'],
+  ['br', 'Brazil'],
+  ['au', 'Australia'],
+  ['ca', 'Canada'],
+] as const
+
+const FILTERS: { label: string; value: Sentiment | null }[] = [
+  { label: 'All', value: null },
+  { label: 'Positive', value: 'positive' },
+  { label: 'Neutral', value: 'neutral' },
+  { label: 'Negative', value: 'negative' },
+]
+
 const route = useRoute()
 const router = useRouter()
 
 const input = ref('')
+const country = ref('')
 const activeQuery = ref<string | null>(null)
 const results = ref<NewsSearchResult[]>([])
 const loading = ref(false)
@@ -40,7 +64,7 @@ async function load(q: string | null) {
   error.value = null
   analyseErrors.clear()
   try {
-    const res = await api.searchNews(q ?? undefined)
+    const res = await api.searchNews(q ?? undefined, country.value || undefined)
     results.value = res.articles
     activeQuery.value = res.query
     sentimentFilter.value = null
@@ -52,19 +76,24 @@ async function load(q: string | null) {
   }
 }
 
-// The URL (?q=...) is the source of truth, so searches are linkable and back/forward works
+// The URL (?q=...&country=..) is the source of truth, so searches are linkable and back/forward works
 watch(
-  () => route.query.q,
-  (q) => {
+  () => [route.query.q, route.query.country],
+  ([q, c]) => {
     const value = typeof q === 'string' ? q : ''
     input.value = value
+    country.value = typeof c === 'string' && COUNTRIES.some(([code]) => code === c) ? c : ''
     load(value || null)
   },
   { immediate: true },
 )
 
-function search(q: string) {
-  router.push({ query: q.trim() ? { q: q.trim() } : {} })
+function search(q: string, c: string = country.value) {
+  router.push({ query: { ...(q.trim() ? { q: q.trim() } : {}), ...(c ? { country: c } : {}) } })
+}
+
+function changeCountry(event: Event) {
+  search(input.value, (event.target as HTMLSelectElement).value)
 }
 
 async function analyse(item: NewsSearchResult) {
@@ -93,13 +122,22 @@ async function analyseAll() {
 
 <template>
   <section class="hero">
-    <h1>What's the mood of the news?</h1>
-    <p class="muted">
-      Search recent articles, get an AI summary and sentiment score, and see how coverage of a topic leans.
-    </p>
+    <h1>What's the <em>mood</em> of the news?</h1>
+    <ul class="value-points">
+      <li>
+        <strong>Every article scored.</strong> A short summary, and whether it is good or bad news for those involved.
+      </li>
+      <li><strong>Every topic at a glance.</strong> See how coverage leans, worldwide or in one country.</li>
+      <li>
+        <strong>Answers with sources.</strong> Ask a question and get an answer built only from articles you can check.
+      </li>
+    </ul>
 
     <form class="search" role="search" @submit.prevent="search(input)">
       <input v-model="input" type="search" placeholder="Search a topic, company or person…" aria-label="Search news" />
+      <select :value="country" aria-label="Country" class="country" @change="changeCountry">
+        <option v-for="[code, name] in COUNTRIES" :key="code" :value="code">{{ name }}</option>
+      </select>
       <button class="primary" type="submit" :disabled="loading">Search</button>
     </form>
 
@@ -120,7 +158,8 @@ async function analyseAll() {
   <section v-if="!loading && results.length" class="toolbar">
     <div class="toolbar-head">
       <h2>
-        {{ activeQuery ? `Results for “${activeQuery}”` : 'Top headlines' }}
+        {{ activeQuery ? `Results for “${activeQuery}”` : 'Top headlines'
+        }}<span v-if="country" class="muted where"> · {{ COUNTRIES.find(([c]) => c === country)?.[1] }}</span>
         <span class="muted count" aria-live="polite">{{ analysed.length }}/{{ results.length }} analysed</span>
       </h2>
       <button v-if="pending.length" class="primary" :disabled="analysing.size > 0" @click="analyseAll">
@@ -134,6 +173,19 @@ async function analyseAll() {
       :selected="sentimentFilter"
       @select="sentimentFilter = $event"
     />
+    <div v-if="analysed.length" class="toolbar-foot">
+      <div class="segmented" role="group" aria-label="Show only">
+        <button
+          v-for="f in FILTERS"
+          :key="f.label"
+          :class="{ active: sentimentFilter === f.value }"
+          @click="sentimentFilter = f.value"
+        >
+          {{ f.label }}
+        </button>
+      </div>
+      <p class="muted definition">Labels say whether each story is good or bad news for the people it is about.</p>
+    </div>
     <SentimentHelp v-if="analysed.length" />
     <p v-else class="muted hint">Analyse articles to see how coverage of this topic leans.</p>
   </section>
@@ -170,6 +222,76 @@ async function analyseAll() {
 .search input {
   flex: 1;
   min-width: 0;
+}
+.country {
+  height: 44px;
+  max-width: 180px;
+  padding: 0 32px 0 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.92rem;
+  box-shadow: var(--shadow);
+  appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+    linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) 19px,
+    calc(100% - 13px) 19px;
+  background-size:
+    5px 5px,
+    5px 5px;
+  background-repeat: no-repeat;
+}
+.country:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+.value-points {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 6px 20px;
+  font-size: 0.93rem;
+  color: var(--muted);
+}
+.value-points strong {
+  color: var(--text);
+  font-weight: 700;
+}
+.where {
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+.toolbar-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin-top: 12px;
+}
+.definition {
+  margin: 0;
+  font-size: 0.85rem;
+}
+@media (max-width: 600px) {
+  .search {
+    flex-wrap: wrap;
+  }
+  .search input {
+    flex-basis: 100%;
+  }
+  .country {
+    flex: 1;
+    max-width: none;
+  }
 }
 .chips {
   display: flex;

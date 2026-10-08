@@ -8,7 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.models import TS_CONFIG, Article, search_document
-from app.schemas import ArticleCreate, Sentiment, SentimentStats
+from app.schemas import ArticleCreate, Sentiment, SentimentStats, TopicStats
 from app.services.ai import Analysis
 
 
@@ -61,6 +61,35 @@ def stats(db: Session) -> SentimentStats:
         negative=counts.get("negative", 0),
         average_score=round(average, 2) if average is not None else None,
     )
+
+
+def stats_by_topic(db: Session, limit: int = 12) -> list[TopicStats]:
+    """Sentiment split per search topic, most-analysed topics first. Articles without a topic are skipped."""
+    rows = db.execute(
+        select(Article.query, Article.sentiment, func.count(), func.avg(Article.sentiment_score))
+        .where(Article.query.is_not(None))
+        .group_by(Article.query, Article.sentiment)
+    ).all()
+    by_topic: dict[str, dict] = {}
+    for topic, sentiment, count, avg in rows:
+        t = by_topic.setdefault(topic, {"positive": 0, "neutral": 0, "negative": 0, "score_sum": 0.0})
+        t[sentiment] = count
+        t["score_sum"] += (avg or 0) * count
+    result = []
+    for topic, t in by_topic.items():
+        total = t["positive"] + t["neutral"] + t["negative"]
+        result.append(
+            TopicStats(
+                topic=topic,
+                total=total,
+                positive=t["positive"],
+                neutral=t["neutral"],
+                negative=t["negative"],
+                average_score=round(t["score_sum"] / total, 2) if total else None,
+            )
+        )
+    result.sort(key=lambda s: (-s.total, s.topic))
+    return result[:limit]
 
 
 def delete(db: Session, article: Article) -> None:

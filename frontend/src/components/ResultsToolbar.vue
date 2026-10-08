@@ -25,6 +25,7 @@ defineEmits<{ analyseAll: []; 'update:filter': [value: Sentiment | null] }>()
         {{ activeQuery ? `Results for “${activeQuery}”` : 'Top headlines'
         }}<span v-if="country" class="muted where"> · {{ countryName(country) }}</span>
         <span
+          v-if="analysedCount"
           class="muted count"
           aria-live="polite"
           title="Articles analysed before are shown from your library and are not sent for analysis again"

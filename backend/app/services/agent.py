@@ -106,7 +106,7 @@ class ResearchAgent:
 
     def search_news(self, query: str) -> str:
         if self.searches >= MAX_SEARCHES:
-            return "Search budget used up. Answer with what you have."
+            return "Search budget for this run is used up; answer with what has been found."
         self.searches += 1
         try:
             results = fetch_news(query, max_results=5)

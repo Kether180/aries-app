@@ -63,9 +63,38 @@ async function research(q: string) {
 
 onUnmounted(() => clearInterval(timer))
 
+// One readable sentence per step, so nobody needs the raw tool output
+function summarize(step: ResearchStep): string {
+  const n = step.items.length
+  const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? '' : 's'}`
+  if (step.tool === 'search_news') {
+    if (!n) return friendly(step.output)
+    const known = step.items.filter((i) => i.status === 'already_analysed').length
+    return `Found ${plural(n, 'article')}${known ? `, ${known} already in your library` : ''}.`
+  }
+  if (step.tool === 'analyze_articles') {
+    const done = step.items.filter((i) => i.status === 'analysed').length
+    const skipped = n - done
+    const parts = [done ? `Summarised and scored ${plural(done, 'article')} and saved them to your library` : '']
+    if (skipped) parts.push(`${plural(skipped, 'article')} skipped`)
+    return parts.filter(Boolean).join('; ') + '.'
+  }
+  return friendly(step.output)
+}
+
+// Tool messages are written for the model; soften the ones a person may see
+function friendly(output: string): string {
+  if (output.startsWith('Search failed'))
+    return 'The news search did not work this time, so the agent continued with what it already had.'
+  if (output.startsWith('No articles found')) return 'No articles matched this search.'
+  if (output.startsWith('Search budget'))
+    return 'The agent reached its search limit for this question and answered with what it had found.'
+  return output
+}
+
 function describe(step: ResearchStep): string {
   if (step.tool === 'search_news') return `“${step.input.query}”`
-  if (step.tool === 'analyze_articles') return `${step.items.length} article(s)`
+  if (step.tool === 'analyze_articles') return `${step.items.length} article${step.items.length === 1 ? '' : 's'}`
   return JSON.stringify(step.input)
 }
 </script>
@@ -125,6 +154,8 @@ function describe(step: ResearchStep): string {
               <span class="muted"> · {{ describe(step) }}</span>
             </p>
 
+            <p class="step-summary muted">{{ summarize(step) }}</p>
+
             <ul v-if="step.items.length" class="items">
               <li v-for="item in step.items" :key="item.url" class="item">
                 <span v-if="item.source_number" class="item-num">{{ item.source_number }}</span>
@@ -138,12 +169,6 @@ function describe(step: ResearchStep): string {
                 <SentimentBadge v-if="item.sentiment" :sentiment="item.sentiment" />
               </li>
             </ul>
-            <p v-else class="muted step-text">{{ step.output }}</p>
-
-            <details class="raw">
-              <summary class="muted">Raw output the model saw</summary>
-              <pre>{{ step.output }}</pre>
-            </details>
           </div>
         </li>
       </TransitionGroup>
@@ -249,8 +274,8 @@ function describe(step: ResearchStep): string {
 .step-title {
   margin: 1px 0 8px;
 }
-.step-text {
-  margin: 0;
+.step-summary {
+  margin: 0 0 8px;
   font-size: 0.9rem;
 }
 .items {
@@ -301,21 +326,5 @@ function describe(step: ResearchStep): string {
 }
 .item-meta {
   font-size: 0.76rem;
-}
-.raw {
-  margin-top: 8px;
-}
-.raw summary {
-  cursor: pointer;
-  font-size: 0.78rem;
-}
-pre {
-  margin: 6px 0 0;
-  padding: 10px;
-  border-radius: 8px;
-  background: var(--surface-2);
-  font-size: 0.78rem;
-  white-space: pre-wrap;
-  word-break: break-word;
 }
 </style>

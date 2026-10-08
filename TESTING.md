@@ -59,7 +59,7 @@ On the first request after a deploy, free hosting tiers can take 30 to 60 second
 ### Research page
 
 1. Click **Research** in the header.
-2. Type `How is Tesla doing this quarter?` and click **Research**. A "What the agent is doing" panel appears with a timer, and each step shows up as the agent finishes it ("Searched the news", then "Analysed articles"), with the current activity underneath. The whole run takes 10 to 20 seconds.
+2. Type `How is Tesla doing this quarter?` and click **Research**. A "What the agent is doing" panel appears with a timer, and each step shows up as the agent finishes it ("Searched the news", then "Analysed articles"), listing the articles involved with links and sentiment badges, with the current activity underneath. The whole run takes 10 to 20 seconds.
 3. Expected result:
    - an **Answer** of 2 to 5 sentences with small numbered chips like `1` and `2` after sentences
    - a numbered list of sources under the answer; cited ones are fully visible, uncited ones are dimmed

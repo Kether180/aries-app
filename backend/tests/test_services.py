@@ -42,3 +42,17 @@ def test_answer_drops_citations_to_missing_sources(monkeypatch):
     monkeypatch.setattr(ai, "_complete", lambda *args: Answer(answer="x [1][7]", cited_sources=[7, 1, 1, 0]))
     source = SourceDocument(title="t", source_name=None, published_at=None, sentiment="neutral", summary="s")
     assert ai.answer_question("q", [source, source]).cited_sources == [1]
+
+
+def test_missing_inline_markers_are_appended():
+    from app.services.ai import finalize_citations
+
+    fixed = finalize_citations(Answer(answer="Rates went up.", cited_sources=[2, 1, 9]), source_count=2)
+    assert fixed.answer == "Rates went up. [1][2]"
+    assert fixed.cited_sources == [1, 2]
+
+    untouched = finalize_citations(Answer(answer="Rates went up [1].", cited_sources=[1]), source_count=2)
+    assert untouched.answer == "Rates went up [1]."
+
+    none = finalize_citations(Answer(answer="No idea.", cited_sources=[]), source_count=2)
+    assert none.answer == "No idea."

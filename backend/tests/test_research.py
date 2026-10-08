@@ -64,6 +64,11 @@ def test_agent_searches_analyses_and_cites(client, fakes):
     assert body["answer"] == "Profit fell 20% [1]."
     assert body["cited"] == [1]  # citation to non-existent source 9 dropped
     assert [s["tool"] for s in body["steps"]] == ["search_news", "analyze_articles"]
+    assert [i["status"] for i in body["steps"][0]["items"]] == ["found", "found"]
+    analysed_item = body["steps"][1]["items"][0]
+    assert analysed_item["status"] == "analysed"
+    assert analysed_item["sentiment"] == "negative"
+    assert analysed_item["source_number"] == 1
     assert [s["title"] for s in body["sources"]] == ["Tesla profit falls 20%"]
     # First call must use a tool; the model saw tool results before answering
     assert fakes.calls[0]["first"] is True

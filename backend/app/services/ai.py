@@ -4,6 +4,7 @@ Both use structured outputs, so responses are validated against a Pydantic model
 """
 
 import logging
+import re
 import time
 from collections.abc import Sequence
 from functools import lru_cache
@@ -103,6 +104,16 @@ class Answer(BaseModel):
     cited_sources: list[int]
 
 
+def finalize_citations(answer: Answer, source_count: int) -> Answer:
+    """Keep citations consistent with the sources: drop numbers that point at no source, and if the
+    model listed sources but wrote no inline [n] markers (the small model sometimes skips them),
+    append them so the reader can see what the answer rests on."""
+    answer.cited_sources = sorted({n for n in answer.cited_sources if 1 <= n <= source_count})
+    if answer.cited_sources and not re.search(r"\[\d+\]", answer.answer):
+        answer.answer = answer.answer.rstrip() + " " + "".join(f"[{n}]" for n in answer.cited_sources)
+    return answer
+
+
 class SourceDocument(BaseModel):
     """What the model sees for each retrieved article."""
 
@@ -121,6 +132,4 @@ def answer_question(question: str, sources: Sequence[SourceDocument]) -> Answer:
         for n, s in enumerate(sources, start=1)
     )
     answer = _complete(ANSWER_PROMPT, f"Sources:\n\n{context}\n\nQuestion: {question}", Answer)
-    # Drop citations that don't point at a real source
-    answer.cited_sources = sorted({n for n in answer.cited_sources if 1 <= n <= len(sources)})
-    return answer
+    return finalize_citations(answer, len(sources))

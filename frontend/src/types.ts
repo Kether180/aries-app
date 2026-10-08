@@ -55,10 +55,21 @@ export interface AskResponse {
   cited: number[]
 }
 
+export interface ResearchStepItem {
+  url: string
+  title: string
+  source_name: string | null
+  status: 'found' | 'already_analysed' | 'analysed' | 'skipped'
+  sentiment: Sentiment | null
+  source_number: number | null
+  note: string | null
+}
+
 export interface ResearchStep {
   tool: string
   input: Record<string, unknown>
-  output: string
+  output: string // raw tool result as the model saw it
+  items: ResearchStepItem[] // the same information, structured for display
 }
 
 export interface ResearchResponse {

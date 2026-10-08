@@ -3,7 +3,8 @@ import { computed, onUnmounted, ref } from 'vue'
 
 import { ApiError, api } from '@/api'
 import CitedAnswer from '@/components/CitedAnswer.vue'
-import type { ResearchResponse, ResearchStep } from '@/types'
+import SentimentBadge from '@/components/SentimentBadge.vue'
+import type { ResearchResponse, ResearchStep, ResearchStepItem } from '@/types'
 
 const EXAMPLES = [
   'How is Tesla doing this quarter?',
@@ -14,6 +15,13 @@ const EXAMPLES = [
 const TOOL_LABELS: Record<string, string> = {
   search_news: 'Searched the news',
   analyze_articles: 'Analysed articles',
+}
+
+const STATUS_LABELS: Record<ResearchStepItem['status'], string> = {
+  found: 'found',
+  already_analysed: 'already in library',
+  analysed: 'analysed',
+  skipped: 'skipped',
 }
 
 const question = ref('')
@@ -57,7 +65,7 @@ onUnmounted(() => clearInterval(timer))
 
 function describe(step: ResearchStep): string {
   if (step.tool === 'search_news') return `“${step.input.query}”`
-  if (step.tool === 'analyze_articles') return `${(step.input.urls as string[] | undefined)?.length ?? 0} article(s)`
+  if (step.tool === 'analyze_articles') return `${step.items.length} article(s)`
   return JSON.stringify(step.input)
 }
 </script>
@@ -111,13 +119,32 @@ function describe(step: ResearchStep): string {
       <TransitionGroup name="fade">
         <li v-for="(step, i) in steps" :key="i">
           <span class="step-num done">✓</span>
-          <details>
-            <summary>
+          <div class="step-body">
+            <p class="step-title">
               <strong>{{ TOOL_LABELS[step.tool] ?? step.tool }}</strong>
               <span class="muted"> · {{ describe(step) }}</span>
-            </summary>
-            <pre>{{ step.output }}</pre>
-          </details>
+            </p>
+
+            <ul v-if="step.items.length" class="items">
+              <li v-for="item in step.items" :key="item.url" class="item">
+                <span v-if="item.source_number" class="item-num">{{ item.source_number }}</span>
+                <div class="item-body">
+                  <a :href="item.url" target="_blank" rel="noopener noreferrer">{{ item.title }}</a>
+                  <span class="muted item-meta">
+                    {{ item.source_name || '' }}{{ item.source_name ? ' · ' : '' }}{{ STATUS_LABELS[item.status] }}
+                    <template v-if="item.note"> ({{ item.note }})</template>
+                  </span>
+                </div>
+                <SentimentBadge v-if="item.sentiment" :sentiment="item.sentiment" />
+              </li>
+            </ul>
+            <p v-else class="muted step-text">{{ step.output }}</p>
+
+            <details class="raw">
+              <summary class="muted">Raw output the model saw</summary>
+              <pre>{{ step.output }}</pre>
+            </details>
+          </div>
         </li>
       </TransitionGroup>
       <li v-if="loading" class="pending">
@@ -184,14 +211,14 @@ h1 {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 14px;
 }
-.steps li {
+.steps > li {
   display: flex;
   gap: 10px;
   align-items: flex-start;
 }
-.steps li.pending {
+.steps > li.pending {
   align-items: center;
 }
 .step-num {
@@ -217,19 +244,78 @@ h1 {
   height: 12px;
   color: var(--accent);
 }
-details {
+.step-body {
   flex: 1;
   min-width: 0;
 }
-summary {
+.step-title {
+  margin: 0 0 6px;
+}
+.step-text {
+  margin: 0;
+  font-size: 0.9rem;
+}
+.items {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--surface-2);
+}
+.item-num {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 22px;
+  text-align: center;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+}
+.item-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.item-body a {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+  font-size: 0.92rem;
+  text-decoration: none;
+}
+.item-body a:hover {
+  text-decoration: underline;
+}
+.item-meta {
+  font-size: 0.78rem;
+}
+.raw {
+  margin-top: 6px;
+}
+.raw summary {
   cursor: pointer;
+  font-size: 0.8rem;
 }
 pre {
-  margin: 8px 0 0;
+  margin: 6px 0 0;
   padding: 10px;
   border-radius: 8px;
   background: var(--surface-2);
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   white-space: pre-wrap;
   word-break: break-word;
 }

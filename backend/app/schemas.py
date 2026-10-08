@@ -92,10 +92,21 @@ class ResearchRequest(BaseModel):
     question: str = Field(min_length=3, max_length=300)
 
 
+class ResearchStepItem(BaseModel):
+    url: str
+    title: str
+    source_name: str | None = None
+    status: Literal["found", "already_analysed", "analysed", "skipped"]
+    sentiment: Sentiment | None = None
+    source_number: int | None = None  # the [n] used in the answer, once analysed
+    note: str | None = None
+
+
 class ResearchStep(BaseModel):
     tool: str
     input: dict
-    output: str
+    output: str  # raw tool result as the model saw it
+    items: list[ResearchStepItem] = []  # the same information, structured for display
 
 
 class ResearchResponse(BaseModel):

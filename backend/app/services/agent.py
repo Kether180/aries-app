@@ -20,7 +20,7 @@ from app.config import settings
 from app.models import Article
 from app.schemas import NewsArticle
 from app.services import articles as article_service
-from app.services.ai import Answer, _client, analyze_article
+from app.services.ai import Answer, _client, analyze_article, finalize_citations
 from app.services.errors import UpstreamError
 from app.services.news import fetch_news
 
@@ -78,7 +78,8 @@ TOOLS = [
 class AgentStep(BaseModel):
     tool: str
     input: dict
-    output: str
+    output: str  # what the model sees
+    items: list[dict] = []  # the same information, structured, for the UI
 
 
 class ResearchResult(BaseModel):
@@ -97,6 +98,7 @@ class ResearchAgent:
         self.found: dict[str, NewsArticle] = {}  # url -> article from search, so analyze can use it
         self.sources: list[Article] = []  # numbered [1]..[n] in tool outputs and the answer
         self.steps: list[AgentStep] = []
+        self.items: list[dict] = []  # filled by the tool being run, attached to its step
         self.searches = 0
         self.analyses = 0
 
@@ -115,11 +117,16 @@ class ResearchAgent:
         for a in results:
             url = str(a.url)
             self.found[url] = a
+            item = {"url": url, "title": a.title, "source_name": a.source_name}
             if url in analysed:
                 n = self._add_source(analysed[url])
                 lines.append(f"- {url}\n  {a.title}\n  ALREADY ANALYSED as source [{n}]")
+                self.items.append(
+                    item | {"status": "already_analysed", "sentiment": analysed[url].sentiment, "source_number": n}
+                )
             else:
                 lines.append(f"- {url}\n  {a.title}\n  {a.description or ''}")
+                self.items.append(item | {"status": "found"})
         return "\n".join(lines) if lines else "No articles found for this query."
 
     def analyze_articles(self, urls: list[str]) -> str:
@@ -128,11 +135,15 @@ class ResearchAgent:
             article = self.found.get(url)
             if article is None:
                 lines.append(f"{url}: unknown URL, search first")
+                self.items.append({"url": url, "title": url, "status": "skipped", "note": "unknown URL"})
                 continue
             existing = article_service.get_by_url(self.db, url)
             if existing is None:
                 if self.analyses >= MAX_ANALYSES:
                     lines.append(f"{url}: analysis budget used up")
+                    self.items.append(
+                        {"url": url, "title": article.title, "status": "skipped", "note": "budget used up"}
+                    )
                     continue
                 self.analyses += 1
                 analysis = analyze_article(article)
@@ -140,6 +151,16 @@ class ResearchAgent:
                 existing, _ = article_service.create(self.db, payload, analysis, model=settings.openai_model)
             n = self._add_source(existing)
             lines.append(f"[{n}] {existing.title}\n  Sentiment: {existing.sentiment}\n  Summary: {existing.summary}")
+            self.items.append(
+                {
+                    "url": url,
+                    "title": existing.title,
+                    "source_name": existing.source_name,
+                    "status": "analysed",
+                    "sentiment": existing.sentiment,
+                    "source_number": n,
+                }
+            )
         return "\n".join(lines)
 
     def _add_source(self, article: Article) -> int:
@@ -162,7 +183,7 @@ class ResearchAgent:
                 answer = message.parsed
                 if answer is None:
                     raise UpstreamError("openai", "agent returned no answer")
-                answer.cited_sources = sorted({n for n in answer.cited_sources if 1 <= n <= len(self.sources)})
+                answer = finalize_citations(answer, len(self.sources))
                 return ResearchResult(
                     answer=answer.answer, cited_sources=answer.cited_sources, steps=self.steps, sources=self.sources
                 )
@@ -192,6 +213,7 @@ class ResearchAgent:
             args = json.loads(arguments or "{}")
         except json.JSONDecodeError:
             args = {}
+        self.items = []
         if name == "search_news":
             output = self.search_news(str(args.get("query", "")))
         elif name == "analyze_articles":
@@ -199,7 +221,7 @@ class ResearchAgent:
         else:
             output = f"Unknown tool {name}"
         logger.info("agent tool %s(%s) -> %d chars", name, args, len(output))
-        step = AgentStep(tool=name, input=args, output=output)
+        step = AgentStep(tool=name, input=args, output=output, items=self.items)
         self.steps.append(step)
         if self.on_step:
             self.on_step(step)

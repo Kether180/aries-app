@@ -10,7 +10,7 @@ From the project root:
 npm run check
 ```
 
-Expected: Ruff "All checks passed", 26 backend tests passed, ESLint and Prettier clean, `vue-tsc` and Vite build succeed. Runs in under a minute and needs no API keys; GNews and OpenAI are mocked.
+Expected: Ruff "All checks passed", 40 backend tests passed (one Postgres-only test skipped on SQLite), ESLint and Prettier clean, `vue-tsc` and Vite build succeed. Runs in under a minute and needs no API keys; GNews and OpenAI are mocked.
 
 To run the same tests against a real Postgres (what CI does):
 
@@ -26,7 +26,7 @@ Live tests against the real OpenAI and GNews APIs (needs both keys in `backend/.
 npm run test:llm
 ```
 
-Expected: 4 passed. They check that an analysis is grounded in the article, that answers cite sources and admit when the sources do not contain the answer, that the agent searches before answering, and the whole user journey end to end.
+Expected: 5 passed. They check that an analysis is grounded in the article, that answers cite sources and admit when the sources do not contain the answer, that the agent searches before answering, the whole user journey end to end, and a labelled set of eight articles for sentiment accuracy.
 
 ## 2. Start the app
 

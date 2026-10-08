@@ -56,8 +56,7 @@ Open http://localhost:8000. Migrations run on start. For a local Postgres: `dock
 - If the GNews daily quota is used up (or no key is set), searches come from the Google News RSS feed instead: no key, no quota, but no images or article text.
 - "Summarise & score" per article, or "Analyse all" for the page.
 - A bar shows how coverage of the current search leans, with a switch to show only positive, neutral or negative stories.
-- Already-analysed articles show their stored result; nothing is sent to OpenAI twice.
-- The search is in the URL (`/?q=climate`), so it can be shared.
+- Every visit starts fresh on top headlines. Articles analysed before are not shown until asked; when you analyse them again they come back instantly from the library, with no second model call.
 
 **Research** (`/research`)
 - Ask a question like "How is Tesla doing this quarter?".
@@ -76,7 +75,7 @@ Each analysis: a 2 to 3 sentence summary, a label (positive / neutral / negative
 
 **Summary and sentiment** (`services/ai.py`, `analyze_article`)
 - One OpenAI call per article using structured outputs, validated by a Pydantic model: the label is always one of three values, the score always in range.
-- The prompt asks for the tone of the news for the people involved, not the model's opinion, and warns that the text may be truncated (GNews free tier cuts article bodies).
+- Sentiment is defined as "good or bad news for the people and organisations the article is about", not the tone of the writing. The prompt walks the model through who is affected and what happened, with examples; a labelled evaluation set in the live tests guards against the earlier bias towards "neutral".
 
 **Ask your library, RAG** (`services/articles.py` retrieval, `services/ai.py` generation, `routers/ask.py`)
 - Retrieval: Postgres full-text search over title, description, summary and search topic, with a GIN index. Question words are OR-ed so natural questions still match.
@@ -116,7 +115,7 @@ flowchart LR
     end
 
     DB[(Postgres / SQLite<br/>articles table)]
-    GN[GNews API]
+    GN[GNews API<br/>or Google News RSS]
     OA[OpenAI API<br/>gpt-4.1-nano]
 
     UI -->|JSON| R1 & R2 & R3 & R4
@@ -231,7 +230,7 @@ frontend/
 See [TESTING.md](TESTING.md) for a step by step guide: automated suite, manual walk-through of every page, API checks and failure modes.
 
 - `backend/tests/`: API, services, RAG, agent loop (scripted fake model), middleware, and one test for the whole user journey. External services mocked; runs in under a second without keys.
-- Four tests marked `llm` hit the real OpenAI and GNews APIs. Skipped without keys.
+- Five tests marked `llm` hit the real OpenAI API (news via GNews or the RSS fallback), including a labelled sentiment set. Skipped without keys.
 - CI: Ruff, migrations and tests against Postgres 16, then ESLint, Prettier, type check and frontend build.
 
 ## Deployment

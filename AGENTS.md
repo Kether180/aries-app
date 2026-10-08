@@ -47,6 +47,7 @@ Run `npm run check` before committing. CI fails on lint or format issues. CI run
 - Agent tools must be `strict: true` with `additionalProperties: false`, or the SDK's `parse()` rejects them.
 - Tool errors are returned to the model as text, not raised, so the agent can still answer. Tool messages are also shown to users when a step has no items, so keep them readable.
 - Keep the agent budgets (`MAX_SEARCHES`, `MAX_ANALYSES`, `MAX_STEPS`).
+- The Discover page starts fresh on every load and keeps no search state in the URL (a product decision: refresh means start over). Saved analyses are not shown until the user asks; `POST /api/articles` then returns them instantly.
 - A country filter switches the search language to that country's own language (`COUNTRY_LANGUAGE`), so results come from its press; summaries are always written in English.
 - UI wording is for readers, not developers: no "model", "agent", "raw output" on the page. The research panel is "Behind this answer".
 - Line length 120 in both languages. Prettier: no semicolons, single quotes.

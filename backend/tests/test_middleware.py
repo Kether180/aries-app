@@ -49,3 +49,9 @@ def test_unknown_api_route_is_json_404_not_frontend(client):
     assert res.status_code == 404
     if FRONTEND_DIST.exists():  # the SPA catch-all is only mounted when the frontend is built
         assert res.json() == {"detail": "Not found"}
+
+
+def test_health_reports_database_engine(client):
+    body = client.get("/api/health").json()
+    assert body["status"] == "ok"
+    assert body["database"] in {"sqlite", "postgresql"}

@@ -8,6 +8,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
+from app.db import engine
 from app.middleware import RequestIdFilter, RequestIdMiddleware, SecurityHeadersMiddleware
 from app.routers import articles, ask, news, research
 from app.services.errors import UpstreamError
@@ -67,7 +68,8 @@ def unhandled_error_handler(request: Request, exc: Exception):
 
 @app.get("/api/health", tags=["meta"])
 def health():
-    return {"status": "ok"}
+    # The engine name (never the URL) makes a misconfigured DATABASE_URL visible from outside
+    return {"status": "ok", "database": engine.dialect.name}
 
 
 app.include_router(news.router)

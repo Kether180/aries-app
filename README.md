@@ -222,6 +222,8 @@ frontend/
 
 ## Tests and CI
 
+See [TESTING.md](TESTING.md) for a step by step guide: automated suite, manual walk-through of every page, API checks and failure modes.
+
 - `backend/tests/`: API, services, RAG, agent loop (scripted fake model), middleware, and one test for the whole user journey. External services mocked; runs in under a second without keys.
 - Four tests marked `llm` hit the real OpenAI and GNews APIs. Skipped without keys.
 - CI: Ruff, migrations and tests against Postgres 16, then ESLint, Prettier, type check and frontend build.
@@ -235,7 +237,30 @@ Railway (one project holds the app and the database):
 3. On the app service, Variables: `DATABASE_URL` = `${{Postgres.DATABASE_URL}}`, plus `GNEWS_API_KEY` and `OPENAI_API_KEY`.
 4. Settings → Networking → Generate Domain.
 
-Migrations run on start. The image runs as a non-root user with a health check. `render.yaml` is also included for Render (web service plus an external Postgres such as Neon).
+Migrations run on start. The image runs as a non-root user with a health check.
+
+## Scaling
+
+What already helps:
+
+- The app is stateless apart from one in-memory search cache, so several instances can run behind a load balancer with no session affinity.
+- Analyses are keyed by article URL and never computed twice, which caps OpenAI spend at one call per unique article.
+- The database has indexes on `url`, `sentiment`, `created_at` and a GIN index for full-text search. Listing is paginated.
+- The agent has hard budgets per run, so one request cannot consume unbounded GNews quota or model calls.
+- Request IDs in logs make it possible to trace a slow or failed request across instances.
+
+What breaks first, and the fix for each, in the order I would do them:
+
+1. **Blocking I/O.** Routes are synchronous, so each OpenAI call (1 to 3 s) occupies a worker thread. First step is more Uvicorn workers; the proper fix is `AsyncOpenAI`, `httpx.AsyncClient` and async SQLAlchemy, and analysing a batch concurrently with `asyncio.gather` under a semaphore.
+2. **Long requests.** "Analyse all" and the agent run inside the HTTP request (up to 20 s). Move them to a job queue (Celery or RQ on Redis, or Postgres-backed with `SKIP LOCKED`), return a job id, and let the UI poll or subscribe over SSE for progress. This also survives client disconnects and allows retries.
+3. **The in-memory cache.** It is per process, so two instances would call GNews twice for the same search. Move it to Redis with the same 10 minute TTL, or store raw search results in Postgres keyed by query and time.
+4. **GNews quota.** 100 requests a day is the real ceiling. Besides caching, pre-fetch popular topics on a schedule, store the results, and serve searches from the database first. A paid tier or a second news source behind the same `fetch_news` interface would be the next step.
+5. **OpenAI rate limits and cost.** Add retry with backoff on 429 (the SDK does some of this), a per-user or per-IP quota on analyse and research endpoints, and track tokens per request (already logged) into a table for cost reporting.
+6. **Database.** Postgres handles this schema to millions of rows without changes. Beyond that: partition `articles` by `created_at`, add a read replica for the library and stats, and move the stats query to a materialised view refreshed on a schedule.
+7. **Retrieval quality.** Full-text search is fine for keyword questions. With embeddings access, add a `vector` column (pgvector), embed summaries on insert, and combine lexical and vector scores. Only `search_relevant()` changes.
+8. **Multi-user.** Add authentication and a `user_id` column; filter every query by it. The library and the "Ask your library" retrieval are then per user.
+
+Rough capacity today: one free instance handles a few concurrent users comfortably. Items 1 to 3 take it to hundreds of concurrent users; items 4 and 5 are about cost, not throughput.
 
 ## Next steps
 

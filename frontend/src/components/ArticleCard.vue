@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { ref } from 'vue'
+
 import SentimentBadge from '@/components/SentimentBadge.vue'
 import { timeAgo } from '@/format'
 import type { Article, NewsArticle } from '@/types'
@@ -12,17 +14,20 @@ defineProps<{
 }>()
 
 defineEmits<{ analyze: []; delete: [] }>()
+
+// Some news sites block hotlinking; when the image fails we drop it so the card uses the full width
+const imageFailed = ref(false)
 </script>
 
 <template>
-  <article class="card" :class="{ analysed: analysis }">
+  <article class="card" :class="{ analysed: analysis, 'has-thumb': article.image_url && !imageFailed }">
     <img
-      v-if="article.image_url"
+      v-if="article.image_url && !imageFailed"
       :src="article.image_url"
       alt=""
       class="thumb"
       loading="lazy"
-      @error="($event.target as HTMLImageElement).hidden = true"
+      @error="imageFailed = true"
     />
 
     <div class="body">
@@ -64,15 +69,15 @@ defineEmits<{ analyze: []; delete: [] }>()
 <style scoped>
 .card {
   display: grid;
-  grid-template-columns: 160px 1fr;
+  grid-template-columns: 1fr;
   gap: 16px;
   padding: 16px;
   border: 1px solid var(--border);
   border-radius: 12px;
   background: var(--surface);
 }
-.card:not(:has(.thumb)) {
-  grid-template-columns: 1fr;
+.card.has-thumb {
+  grid-template-columns: 160px 1fr;
 }
 .thumb {
   width: 160px;

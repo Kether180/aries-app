@@ -2,8 +2,11 @@
 
 from types import SimpleNamespace
 
+import pytest
+
 from app.services import ai, news
 from app.services.ai import Analysis, Answer, SourceDocument
+from app.services.errors import UpstreamError
 
 
 def test_gnews_article_mapping():
@@ -16,7 +19,7 @@ def test_gnews_article_mapping():
         "publishedAt": "2026-10-01T12:00:00Z",
         "source": {"name": "Example", "url": "https://example.com"},
     }
-    article = news._to_article(raw)
+    article = news._gnews_article(raw)
     assert article.source_name == "Example"
     assert article.image_url == "https://example.com/a.jpg"
     assert article.published_at.year == 2026
@@ -95,3 +98,63 @@ def test_sentiment_label_follows_score():
         ).sentiment
         == "positive"
     )
+
+
+RSS_SAMPLE = """<?xml version="1.0"?><rss version="2.0"><channel><title>x</title>
+<item><title>Central bank raises rates - Reuters</title><link>https://example.com/rates</link>
+<pubDate>Wed, 08 Oct 2026 10:00:00 GMT</pubDate>
+<description>&lt;a href="x"&gt;Central bank raises rates&lt;/a&gt;&amp;nbsp;
+&lt;font&gt;Reuters&lt;/font&gt;</description>
+<source url="https://reuters.com">Reuters</source></item>
+<item><title>No link</title></item>
+</channel></rss>"""
+
+
+def test_rss_fallback_when_gnews_is_rate_limited(monkeypatch):
+    monkeypatch.setattr(news.settings, "gnews_api_key", "test-key")
+    monkeypatch.setattr(news.time, "sleep", lambda s: None)
+    news._cache.clear()
+    calls = []
+
+    def fake_get(url, params, timeout, follow_redirects=False):
+        calls.append(url)
+        if url.startswith(news.BASE_URL):
+            return SimpleNamespace(status_code=429, json=lambda: {}, headers={}, text="limit")
+        return SimpleNamespace(status_code=200, text=RSS_SAMPLE, raise_for_status=lambda: None)
+
+    monkeypatch.setattr(news.httpx, "get", fake_get)
+    articles = news.fetch_news("rates", country="gb")
+    assert [c.startswith(news.BASE_URL) for c in calls] == [True, True, False]  # GNews, retry, then RSS
+    assert len(articles) == 1
+    a = articles[0]
+    assert a.title == "Central bank raises rates"  # " - Reuters" suffix removed
+    assert a.source_name == "Reuters"
+    assert a.description == "Central bank raises rates Reuters"  # tags stripped
+    assert a.published_at.year == 2026
+
+
+def test_rss_used_when_no_gnews_key(monkeypatch):
+    monkeypatch.setattr(news.settings, "gnews_api_key", "")
+    news._cache.clear()
+    monkeypatch.setattr(
+        news.httpx,
+        "get",
+        lambda url, params, timeout, follow_redirects=False: SimpleNamespace(
+            status_code=200, text=RSS_SAMPLE, raise_for_status=lambda: None
+        ),
+    )
+    assert len(news.fetch_news(None)) == 1
+
+
+def test_non_rate_limit_gnews_errors_still_raise(monkeypatch):
+    monkeypatch.setattr(news.settings, "gnews_api_key", "test-key")
+    news._cache.clear()
+    monkeypatch.setattr(
+        news.httpx,
+        "get",
+        lambda url, params, timeout, follow_redirects=False: SimpleNamespace(
+            status_code=401, json=lambda: {"errors": ["bad key"]}, headers={"content-type": "application/json"}, text=""
+        ),
+    )
+    with pytest.raises(UpstreamError):
+        news.fetch_news("x")

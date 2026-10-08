@@ -69,7 +69,9 @@ def unhandled_error_handler(request: Request, exc: Exception):
 @app.get("/api/health", tags=["meta"])
 def health():
     # The engine name (never the URL) makes a misconfigured DATABASE_URL visible from outside
-    return {"status": "ok", "database": engine.dialect.name}
+    url = settings.database_url
+    scheme = "unset" if url is None else ("empty" if not url else url.split(":", 1)[0][:12])
+    return {"status": "ok", "database": engine.dialect.name, "database_url_scheme": scheme}
 
 
 app.include_router(news.router)

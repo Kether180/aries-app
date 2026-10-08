@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import SentimentBadge from '@/components/SentimentBadge.vue'
 import { timeAgo } from '@/format'
 import type { Article, NewsArticle } from '@/types'
 
-defineProps<{
+const props = defineProps<{
   article: NewsArticle
   analysis: Article | null
   loading?: boolean
@@ -17,12 +17,23 @@ defineEmits<{ analyze: []; delete: [] }>()
 
 // Some news sites block hotlinking; when the image fails we drop it so the card uses the full width
 const imageFailed = ref(false)
+const faviconFailed = ref(false)
+
+// Publisher icon for the placeholder tile, via Google's favicon service (works for any domain)
+const faviconUrl = computed(() => {
+  if (faviconFailed.value) return null
+  try {
+    const host = new URL(props.article.source_url || props.article.url).hostname
+    return `https://www.google.com/s2/favicons?domain=${host}&sz=64`
+  } catch {
+    return null
+  }
+})
 </script>
 
 <template>
-  <article class="card" :class="{ analysed: analysis, 'has-thumb': article.image_url && !imageFailed }">
+  <article class="card has-thumb" :class="{ analysed: analysis }">
     <a
-      v-if="article.image_url && !imageFailed"
       :href="article.url"
       target="_blank"
       rel="noopener noreferrer"
@@ -30,7 +41,19 @@ const imageFailed = ref(false)
       tabindex="-1"
       aria-hidden="true"
     >
-      <img :src="article.image_url" alt="" class="thumb" loading="lazy" @error="imageFailed = true" />
+      <img
+        v-if="article.image_url && !imageFailed"
+        :src="article.image_url"
+        alt=""
+        class="thumb"
+        loading="lazy"
+        @error="imageFailed = true"
+      />
+      <!-- No usable picture (some publishers block hotlinking): a tile with the publisher's icon keeps the card's shape -->
+      <span v-else class="thumb placeholder">
+        <img v-if="faviconUrl" :src="faviconUrl" alt="" class="favicon" loading="lazy" @error="faviconFailed = true" />
+        <span v-else class="initial">{{ (article.source_name || '?').charAt(0) }}</span>
+      </span>
     </a>
 
     <div class="body">
@@ -116,6 +139,29 @@ const imageFailed = ref(false)
   object-fit: cover;
   border-radius: 10px;
   background: var(--surface-3);
+}
+.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--surface-2), var(--surface-3));
+}
+.favicon {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  opacity: 0.9;
+}
+.initial {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 1.1rem;
+  font-weight: 800;
+  line-height: 40px;
+  text-align: center;
+  color: var(--accent);
+  background: var(--accent-soft);
 }
 .body {
   min-width: 0;

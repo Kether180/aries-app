@@ -64,3 +64,61 @@ def test_agent_searches_then_answers_with_citations(client, monkeypatch):
     assert "analyze_articles" in tools
     assert body["cited"], "agent should cite at least one source"
     assert all("soup" not in s["title"].lower() for s in body["sources"]), "irrelevant article should be skipped"
+
+
+# A small labelled set, including the hard case: bad events written in a neutral journalistic style.
+EVAL_SET = [
+    (
+        "negative",
+        "Pentagon orders US military to gear up for Iran strikes",
+        "Officials said forces were told to prepare options; a decision on timing has not been made.",
+    ),
+    (
+        "negative",
+        "Central bank raises interest rates for a third time this year",
+        "The move lifts borrowing costs for households and businesses as inflation stays above target.",
+    ),
+    (
+        "negative",
+        "Car plant to close next spring with 1,200 jobs lost",
+        "The company said the site was no longer viable; unions called the decision devastating.",
+    ),
+    (
+        "negative",
+        "Floods displace thousands as river bursts its banks",
+        "Emergency services evacuated several villages overnight; two people are missing.",
+    ),
+    (
+        "positive",
+        "New battery factory to create 3,000 jobs in the region",
+        "Production is due to start next year, supplying cells for European carmakers.",
+    ),
+    (
+        "positive",
+        "Regulator drops investigation into pension funds",
+        "The watchdog said it found no wrongdoing and would take no further action.",
+    ),
+    (
+        "neutral",
+        "Minister to launch consultation on new rules for AI companies",
+        "The eight-week consultation will gather views before any legislation is drafted.",
+    ),
+    (
+        "neutral",
+        "Five warming soups to make this autumn",
+        "From a classic minestrone to a spiced lentil, these recipes take under an hour.",
+    ),
+]
+
+
+def test_sentiment_eval_set_mostly_correct():
+    results = []
+    for expected, title, description in EVAL_SET:
+        got = analyze_article(
+            NewsArticle(url=f"https://example.com/{abs(hash(title))}", title=title, description=description)
+        )
+        results.append((expected, got.sentiment, title))
+    wrong = [(e, g, t) for e, g, t in results if e != g]
+    labels = {g for _, g, _ in results}
+    assert len(wrong) <= 1, f"too many mislabelled: {wrong}"
+    assert labels >= {"positive", "negative"}, f"labels collapsed: {labels}"

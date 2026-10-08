@@ -14,7 +14,7 @@ const EXAMPLES = [
 
 const TOOL_LABELS: Record<string, string> = {
   search_news: 'Searched the news',
-  analyze_articles: 'Analysed articles',
+  analyze_articles: 'Read and scored',
 }
 
 const STATUS_LABELS: Record<ResearchStepItem['status'], string> = {
@@ -32,13 +32,13 @@ const error = ref<string | null>(null)
 const elapsed = ref(0)
 let timer: ReturnType<typeof setInterval> | undefined
 
-// What the agent is doing right now, inferred from the last step it finished
+// Current activity, inferred from the last step that finished
 const currentActivity = computed(() => {
   if (!loading.value) return ''
   const last = steps.value[steps.value.length - 1]
-  if (!last) return 'Deciding what to search'
-  if (last.tool === 'search_news') return 'Reading the results and picking articles to analyse'
-  return 'Writing the answer, or analysing more articles'
+  if (!last) return 'Choosing what to search for'
+  if (last.tool === 'search_news') return 'Picking the articles worth reading'
+  return 'Writing the answer'
 })
 
 async function research(q: string) {
@@ -85,10 +85,10 @@ function summarize(step: ResearchStep): string {
 // Tool messages are written for the model; soften the ones a person may see
 function friendly(output: string): string {
   if (output.startsWith('Search failed'))
-    return 'The news search did not work this time, so the agent continued with what it already had.'
+    return 'The news search did not work this time, so the answer is based on what was already found.'
   if (output.startsWith('No articles found')) return 'No articles matched this search.'
   if (output.startsWith('Search budget'))
-    return 'The agent reached its search limit for this question and answered with what it had found.'
+    return 'Reached the search limit for one question; the answer uses what was found so far.'
   return output
 }
 
@@ -103,8 +103,8 @@ function describe(step: ResearchStep): string {
   <section class="hero">
     <h1>Research a question</h1>
     <p class="muted">
-      An agent searches the news, analyses the relevant articles and answers with citations. Everything it analyses is
-      saved to your <RouterLink to="/library">Library</RouterLink>.
+      Ask anything about what is in the news. We search, read the relevant articles and answer with sources you can
+      check. Every article we read is saved to your <RouterLink to="/library">Library</RouterLink>.
     </p>
 
     <form class="search" @submit.prevent="research(question)">
@@ -141,7 +141,7 @@ function describe(step: ResearchStep): string {
 
   <section v-if="steps.length || loading" class="panel" aria-live="polite">
     <div class="panel-head">
-      <h2>{{ loading ? 'What the agent is doing' : 'What the agent did' }}</h2>
+      <h2>{{ loading ? 'Finding and reading articles…' : 'Behind this answer' }}</h2>
       <span v-if="loading" class="muted elapsed">{{ elapsed }}s</span>
     </div>
     <ol class="steps">

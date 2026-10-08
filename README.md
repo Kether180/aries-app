@@ -61,7 +61,7 @@ Open http://localhost:8000. Migrations run on start. For a local Postgres: `dock
 **Research** (`/research`)
 - Ask a question like "How is Tesla doing this quarter?".
 - An agent searches, analyses the relevant articles, and answers with numbered citations.
-- The steps appear live while it works (server-sent events). Analysed articles land in the library.
+- The steps appear live under "Behind this answer" while it works (server-sent events). Articles it reads land in the library.
 
 **Library** (`/library`)
 - Everything analysed, newest first, with counts per sentiment and the average score.

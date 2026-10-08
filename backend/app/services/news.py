@@ -25,16 +25,38 @@ BASE_URL = "https://gnews.io/api/v4"
 RSS_URL = "https://news.google.com/rss"
 RETRY_AFTER_SECONDS = 1.2
 
+# A country filter only makes sense in that country's press, which is in its own language.
+# Without this, "Netherlands" + English returns the same international outlets as "Worldwide".
+COUNTRY_LANGUAGE = {
+    "us": "en",
+    "gb": "en",
+    "au": "en",
+    "ca": "en",
+    "in": "en",
+    "ie": "en",
+    "de": "de",
+    "at": "de",
+    "ch": "de",
+    "fr": "fr",
+    "es": "es",
+    "it": "it",
+    "nl": "nl",
+    "pt": "pt",
+    "br": "pt",
+}
+
 _cache: dict[tuple, tuple[float, list[NewsArticle]]] = {}
 
 
 def fetch_news(
-    query: str | None, lang: str = "en", max_results: int = 10, country: str | None = None
+    query: str | None, lang: str | None = None, max_results: int = 10, country: str | None = None
 ) -> list[NewsArticle]:
     """Search articles for `query`, or return top headlines when no query is given.
 
-    `country` narrows results to one country's press (two-letter codes, e.g. "us", "gb", "de").
+    `country` narrows results to one country's press (two-letter codes, e.g. "us", "gb", "de");
+    `lang` defaults to that country's language, or English.
     """
+    lang = lang or COUNTRY_LANGUAGE.get(country or "", "en")
     key = (query, lang, max_results, country)
     cached = _cache.get(key)
     if cached and time.monotonic() - cached[0] < settings.news_cache_seconds:

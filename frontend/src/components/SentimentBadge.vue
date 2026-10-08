@@ -15,9 +15,15 @@ const label = computed(() => {
   return props.sentiment
 })
 
+const MEANING: Record<Sentiment, string> = {
+  positive: 'good news for the people the article is about',
+  negative: 'bad news for the people the article is about',
+  neutral: 'nothing clearly good or bad for the people the article is about',
+}
+
 const title = computed(() => {
-  if (props.score === undefined) return undefined
-  return `Tone score ${formatScore(props.score)} on a scale from -1 (very negative) to +1 (very positive)`
+  const meaning = `${label.value[0].toUpperCase()}${label.value.slice(1)}: ${MEANING[props.sentiment]}`
+  return props.score === undefined ? meaning : `${meaning} (score ${formatScore(props.score)}, from -1 to +1)`
 })
 
 // Small meter: the fill starts at the centre and extends towards the score's side

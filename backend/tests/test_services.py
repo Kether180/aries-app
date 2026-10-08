@@ -3,7 +3,7 @@
 from types import SimpleNamespace
 
 from app.services import ai, news
-from app.services.ai import Answer, SourceDocument
+from app.services.ai import Analysis, Answer, SourceDocument
 
 
 def test_gnews_article_mapping():
@@ -72,3 +72,26 @@ def test_gnews_retries_once_on_per_second_limit(monkeypatch):
     monkeypatch.setattr(news.httpx, "get", lambda url, params, timeout: calls.append(url) or next(responses))
     assert news.fetch_news("retry-me") == []
     assert len(calls) == 2
+
+
+def test_sentiment_label_follows_score():
+    from app.services.ai import reconcile_sentiment
+
+    assert (
+        reconcile_sentiment(
+            Analysis(summary="s", sentiment="neutral", sentiment_score=-0.6, sentiment_reason="r")
+        ).sentiment
+        == "negative"
+    )
+    assert (
+        reconcile_sentiment(
+            Analysis(summary="s", sentiment="positive", sentiment_score=0.1, sentiment_reason="r")
+        ).sentiment
+        == "neutral"
+    )
+    assert (
+        reconcile_sentiment(
+            Analysis(summary="s", sentiment="negative", sentiment_score=0.5, sentiment_reason="r")
+        ).sentiment
+        == "positive"
+    )

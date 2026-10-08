@@ -57,11 +57,23 @@ def _complete[T: BaseModel](system: str, user: str, schema: type[T]) -> T:
 
 ANALYSIS_PROMPT = """You are a news analyst. Given a news article, produce:
 - summary: 2-3 neutral, factual sentences covering who, what and why it matters.
-- sentiment: the overall tone of the news itself for the people/subjects involved \
-(positive, neutral or negative). Report the article's tone, not your opinion.
-- sentiment_score: a number from -1.0 (very negative) to 1.0 (very positive); \
-around 0 for neutral. It must agree with `sentiment`.
-- sentiment_reason: one short sentence explaining the sentiment.
+- sentiment: is the NEWS good, bad or neither for the people and organisations the article is
+  mainly about? This is about the event, not the writing. News reporting is almost always
+  written in a neutral style; the events it describes usually are not. Decide in three steps:
+  1. Who is mainly affected?
+  2. What happened to them, or what is likely to happen?
+  3. Good for them: positive. Bad for them: negative. Only when nothing good or bad happens
+     (a plain announcement, an explainer, a how-to, routine updates) or the good and bad
+     genuinely balance out: neutral.
+  Examples: "Factory closes, 500 jobs lost" is negative. "Plant opens, 3,000 jobs created" is
+  positive. "Central bank raises rates again" is negative (costlier borrowing). "Military told
+  to prepare strikes" is negative (conflict). "Regulator drops charges against funds" is
+  positive for the funds. "How to make autumn soups" is neutral. "Minister to consult on new
+  AI rules" is neutral.
+- sentiment_score: from -1.0 (clearly bad news) to 1.0 (clearly good news). Use the magnitude
+  for how clear it is: 0.7 or more for unmistakable, 0.3 to 0.6 for likely, under 0.3 only for
+  faint. Neutral is between -0.2 and 0.2. Do not use exactly 0 unless there is truly no direction.
+- sentiment_reason: one short sentence saying who is affected and why it is good or bad for them.
 Only use information in the article. The text may be truncated; do not invent details."""
 
 
@@ -70,6 +82,19 @@ class Analysis(BaseModel):
     sentiment: Sentiment
     sentiment_score: float = Field(ge=-1, le=1)
     sentiment_reason: str
+
+
+NEUTRAL_BAND = 0.2
+
+
+def reconcile_sentiment(analysis: Analysis) -> Analysis:
+    """Keep the label and the score consistent: the score decides the label when they disagree."""
+    score = analysis.sentiment_score
+    if abs(score) < NEUTRAL_BAND:
+        analysis.sentiment = "neutral"
+    else:
+        analysis.sentiment = "positive" if score > 0 else "negative"
+    return analysis
 
 
 def analyze_article(article: NewsArticle) -> Analysis:
@@ -84,7 +109,7 @@ def analyze_article(article: NewsArticle) -> Analysis:
         ]
         if value
     )
-    return _complete(ANALYSIS_PROMPT, text, Analysis)
+    return reconcile_sentiment(_complete(ANALYSIS_PROMPT, text, Analysis))
 
 
 # --- Question answering over saved articles (RAG) ----------------------------------------

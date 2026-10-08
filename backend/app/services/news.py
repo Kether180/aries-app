@@ -152,6 +152,9 @@ def _rss_article(item: ET.Element) -> NewsArticle | None:
         title = title[: -len(source_name) - 3]
     text = html.unescape(_TAGS.sub(" ", item.findtext("description") or ""))
     description = re.sub(r"\s+", " ", text).strip() or None  # also collapses &nbsp;
+    # Google's description is usually just the headline plus the outlet name: no use repeating it
+    if description and description.lower().startswith(title.strip().lower()):
+        description = None
     published = item.findtext("pubDate")
     try:
         published_at = parsedate_to_datetime(published) if published else None

@@ -129,7 +129,7 @@ def test_rss_fallback_when_gnews_is_rate_limited(monkeypatch):
     a = articles[0]
     assert a.title == "Central bank raises rates"  # " - Reuters" suffix removed
     assert a.source_name == "Reuters"
-    assert a.description == "Central bank raises rates Reuters"  # tags stripped
+    assert a.description is None  # the feed description only repeated the headline and outlet
     assert a.published_at.year == 2026
 
 

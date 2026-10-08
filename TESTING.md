@@ -51,7 +51,7 @@ On the first request after a deploy, free hosting tiers can take 30 to 60 second
    - an "AI summary" block with 2 to 3 sentences
    - a badge in words: Positive, Neutral or Negative, with "Strongly" or "Slightly" when the tone is clear or faint, and a small bar showing the same thing (hover it for the exact score)
    - one sentence starting "Why positive:" (or neutral, negative) explaining the label
-4. The box above the cards now says "1 of 10 already analysed" and shows a sentiment bar. Click **What do the labels mean?** under it for a plain-language explanation.
+4. The box above the cards now says "1 of 10 analysed" and shows a sentiment bar. Click **What do the labels mean?** under it for a plain-language explanation.
 5. Click **Analyse the other 9**. The remaining cards analyse three at a time. When done, the box says "10 of 10 analysed" and the bar shows the split, for example "6 neutral (60%), 4 negative (40%)".
 6. Click **Neutral** in the switch under the bar (or **6 neutral** in the legend). Only neutral cards remain and the other bar segments dim. Click **All** to reset. Tap any badge: the "What do the labels mean?" note opens.
 7. Reload the page. It starts fresh: cards show no analysis. Click **Analyse all** again: the results appear almost instantly, because they come from the database and nothing is sent to OpenAI twice.

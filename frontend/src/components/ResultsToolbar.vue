@@ -30,7 +30,7 @@ defineEmits<{ analyseAll: []; 'update:filter': [value: Sentiment | null] }>()
           aria-live="polite"
           title="Articles analysed before are shown from your library and are not sent for analysis again"
         >
-          {{ analysedCount }} of {{ total }} {{ pendingCount ? 'already analysed' : 'analysed' }}
+          {{ analysedCount }} of {{ total }} analysed
         </span>
       </h2>
       <button v-if="pendingCount" class="primary" :disabled="analysingCount > 0" @click="$emit('analyseAll')">

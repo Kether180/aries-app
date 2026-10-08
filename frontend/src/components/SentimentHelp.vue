@@ -1,18 +1,26 @@
 <template>
   <details class="help">
     <summary>What do the labels mean?</summary>
-    <p>Each article gets a tone, judged from the point of view of the people it is about, not from ours:</p>
+    <p>
+      Each label answers one question: is this good or bad news for the people and organisations the article is about?
+    </p>
     <ul>
       <li>
-        <span class="dot positive" /> <strong>Positive:</strong> good news for them. A win, growth, a breakthrough, a
-        recovery.
+        <span class="dot positive" /><strong>Positive:</strong> good news for them. Jobs created, a recovery, a win,
+        charges dropped.
       </li>
-      <li><span class="dot negative" /> <strong>Negative:</strong> bad news. Losses, harm, conflict, a setback.</li>
-      <li><span class="dot neutral" /> <strong>Neutral:</strong> mostly factual, mixed, or routine reporting.</li>
+      <li>
+        <span class="dot negative" /><strong>Negative:</strong> bad news for them. Job losses, rising costs, harm,
+        conflict, a setback.
+      </li>
+      <li>
+        <span class="dot neutral" /><strong>Neutral:</strong> nothing clearly good or bad happened: an announcement, an
+        explainer, a routine update, or good and bad that balance out.
+      </li>
     </ul>
     <p>
-      "Strongly" and "slightly" say how clear the tone is, and the small bar in each badge shows the same thing. Every
-      article also has a one-line reason under its summary.
+      It is about what happened, not how the article is written. "Strongly" or "slightly" says how clear it is, and the
+      small bar in each badge shows the same. Every article also has a one-line reason under its summary.
     </p>
   </details>
 </template>
@@ -69,6 +77,7 @@ li {
 }
 strong {
   color: var(--text);
+  margin-right: 2px;
 }
 .dot {
   flex: none;

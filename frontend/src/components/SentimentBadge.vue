@@ -22,7 +22,7 @@ const MEANING: Record<Sentiment, string> = {
 }
 
 const title = computed(() => {
-  const meaning = `${label.value[0].toUpperCase()}${label.value.slice(1)}: ${MEANING[props.sentiment]}`
+  const meaning = `${label.value.charAt(0).toUpperCase()}${label.value.slice(1)}: ${MEANING[props.sentiment]}`
   return props.score === undefined ? meaning : `${meaning} (score ${formatScore(props.score)}, from -1 to +1)`
 })
 

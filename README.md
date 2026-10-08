@@ -54,14 +54,14 @@ Open http://localhost:8000. Migrations run on start. For a local Postgres: `dock
 **Discover** (`/`)
 - Opens on top headlines. Search any topic or pick a suggestion.
 - "Summarise & score" per article, or "Analyse all" for the page.
-- A bar shows how coverage of the current search leans.
+- A bar shows how coverage of the current search leans. Click a legend entry to filter the cards.
 - Already-analysed articles show their stored result; nothing is sent to OpenAI twice.
 - The search is in the URL (`/?q=climate`), so it can be shared.
 
 **Research** (`/research`)
 - Ask a question like "How is Tesla doing this quarter?".
 - An agent searches, analyses the relevant articles, and answers with numbered citations.
-- The steps it took are shown. Analysed articles land in the library.
+- The steps appear live while it works (server-sent events). Analysed articles land in the library.
 
 **Library** (`/library`)
 - Everything analysed, newest first, with counts per sentiment and the average score.
@@ -165,6 +165,7 @@ sequenceDiagram
 | DELETE | `/api/articles/{id}` | Delete. 204. |
 | POST | `/api/ask` | Answer from stored articles (RAG): answer, sources, which were cited, how they were chosen. |
 | POST | `/api/research` | Run the agent: answer, sources, citations, steps. |
+| POST | `/api/research/stream` | Same, as server-sent events: one `step` event per tool call as it happens, then `answer` or `error`. The Research page uses this. |
 | GET | `/api/health` | Health check. |
 
 Errors and headers:
@@ -264,7 +265,6 @@ Rough capacity today: one free instance handles a few concurrent users comfortab
 
 ## Next steps
 
-- Stream the agent's steps to the page as they happen.
 - Re-analyse an article after a prompt change, keeping history.
 - Sentiment over time per topic.
 - Job queue for "Analyse all" and the agent on large batches.

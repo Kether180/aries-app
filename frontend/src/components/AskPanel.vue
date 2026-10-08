@@ -63,6 +63,7 @@ async function ask(q: string) {
       <p v-if="result.retrieval === 'recent'" class="muted note">
         No saved articles matched this question directly, so the answer is based on your most recent ones.
       </p>
+      <button class="ghost ask-another" @click="result = null">Ask another question</button>
     </div>
   </section>
 </template>
@@ -109,5 +110,9 @@ async function ask(q: string) {
 .note {
   margin: 8px 0 0;
   font-size: 0.85rem;
+}
+.ask-another {
+  margin-top: 8px;
+  padding-left: 0;
 }
 </style>

@@ -5,7 +5,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { api } from '@/api'
 import ArticleCard from '@/components/ArticleCard.vue'
 import SentimentBar from '@/components/SentimentBar.vue'
-import type { NewsSearchResult } from '@/types'
+import type { NewsSearchResult, Sentiment } from '@/types'
 
 const TOPICS = ['Artificial intelligence', 'Climate', 'Stock market', 'Elections', 'Space', 'Health']
 
@@ -22,7 +22,11 @@ const error = ref<string | null>(null)
 const analysing = reactive(new Set<string>())
 const analyseErrors = reactive(new Map<string, string>())
 
+const sentimentFilter = ref<Sentiment | null>(null)
 const analysed = computed(() => results.value.filter((r) => r.analysis))
+const visible = computed(() =>
+  sentimentFilter.value ? results.value.filter((r) => r.analysis?.sentiment === sentimentFilter.value) : results.value,
+)
 const pending = computed(() => results.value.filter((r) => !r.analysis))
 const breakdown = computed(() => {
   const counts = { positive: 0, neutral: 0, negative: 0 }
@@ -38,6 +42,7 @@ async function load(q: string | null) {
     const res = await api.searchNews(q ?? undefined)
     results.value = res.articles
     activeQuery.value = res.query
+    sentimentFilter.value = null
   } catch (e) {
     error.value = (e as Error).message
     results.value = []
@@ -115,13 +120,19 @@ async function analyseAll() {
     <div class="toolbar-head">
       <h2>
         {{ activeQuery ? `Results for “${activeQuery}”` : 'Top headlines' }}
-        <span class="muted count">{{ analysed.length }}/{{ results.length }} analysed</span>
+        <span class="muted count" aria-live="polite">{{ analysed.length }}/{{ results.length }} analysed</span>
       </h2>
       <button v-if="pending.length" class="primary" :disabled="analysing.size > 0" @click="analyseAll">
         {{ analysing.size ? `Analysing ${analysing.size}…` : `Analyse all ${pending.length}` }}
       </button>
     </div>
-    <SentimentBar v-if="analysed.length" v-bind="breakdown" />
+    <SentimentBar
+      v-if="analysed.length"
+      v-bind="breakdown"
+      selectable
+      :selected="sentimentFilter"
+      @select="sentimentFilter = $event"
+    />
     <p v-else class="muted hint">Analyse articles to see how coverage of this topic leans.</p>
   </section>
 
@@ -133,9 +144,11 @@ async function analyseAll() {
 
   <p v-else-if="!error && !results.length" class="empty">No articles found. Try a broader search.</p>
 
-  <div v-else class="list">
+  <p v-else-if="!visible.length" class="empty">No {{ sentimentFilter }} articles in these results.</p>
+
+  <TransitionGroup v-else tag="div" name="fade" class="list">
     <ArticleCard
-      v-for="item in results"
+      v-for="item in visible"
       :key="item.url"
       :article="item"
       :analysis="item.analysis"
@@ -143,7 +156,7 @@ async function analyseAll() {
       :error="analyseErrors.get(item.url)"
       @analyze="analyse(item)"
     />
-  </div>
+  </TransitionGroup>
 </template>
 
 <style scoped>

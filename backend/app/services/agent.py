@@ -10,6 +10,7 @@ Budget per run (keeps GNews quota and latency in check):
 
 import json
 import logging
+from collections.abc import Callable
 
 import openai
 from pydantic import BaseModel
@@ -90,8 +91,9 @@ class ResearchResult(BaseModel):
 
 
 class ResearchAgent:
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, on_step: Callable[[AgentStep], None] | None = None):
         self.db = db
+        self.on_step = on_step  # called after each tool run, used to stream progress to the UI
         self.found: dict[str, NewsArticle] = {}  # url -> article from search, so analyze can use it
         self.sources: list[Article] = []  # numbered [1]..[n] in tool outputs and the answer
         self.steps: list[AgentStep] = []
@@ -197,7 +199,10 @@ class ResearchAgent:
         else:
             output = f"Unknown tool {name}"
         logger.info("agent tool %s(%s) -> %d chars", name, args, len(output))
-        self.steps.append(AgentStep(tool=name, input=args, output=output))
+        step = AgentStep(tool=name, input=args, output=output)
+        self.steps.append(step)
+        if self.on_step:
+            self.on_step(step)
         return output
 
     def _call_model(self, messages: list[dict], *, first: bool, final: bool):

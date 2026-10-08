@@ -89,7 +89,14 @@ onMounted(() => {
           ><span class="muted">avg. score</span>
         </div>
       </div>
-      <SentimentBar :positive="stats.positive" :neutral="stats.neutral" :negative="stats.negative" />
+      <SentimentBar
+        :positive="stats.positive"
+        :neutral="stats.neutral"
+        :negative="stats.negative"
+        selectable
+        :selected="sentiment"
+        @select="sentiment = $event"
+      />
     </div>
   </section>
 

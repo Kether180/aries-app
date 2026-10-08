@@ -212,3 +212,26 @@ form button.primary {
     transform: rotate(360deg);
   }
 }
+
+/* Shared Vue transitions */
+.fade-enter-active,
+.fade-leave-active {
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(4px);
+}
+.fade-move {
+  transition: transform 0.25s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fade-enter-active,
+  .fade-leave-active,
+  .fade-move {
+    transition: none;
+  }
+}

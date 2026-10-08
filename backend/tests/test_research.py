@@ -132,3 +132,39 @@ def test_agent_reports_search_failure_to_model(client, fakes, monkeypatch):
     body = client.post("/api/research", json={"question": "anything"}).json()
     assert body["steps"][0]["output"] == "Search failed: daily request limit reached"
     assert body["answer"] == "Search unavailable."
+
+
+def parse_sse(text: str) -> list[tuple[str, dict]]:
+    events = []
+    for block in text.strip().split("\n\n"):
+        lines = dict(line.split(": ", 1) for line in block.splitlines())
+        events.append((lines["event"], json.loads(lines["data"])))
+    return events
+
+
+def test_stream_sends_steps_then_answer(client, fakes):
+    fakes(
+        [
+            model_turn([tool_call("search_news", query="Tesla")]),
+            model_turn([tool_call("analyze_articles", urls=["https://ex.com/a"])]),
+            model_turn(parsed=Answer(answer="Profit fell 20% [1].", cited_sources=[1])),
+        ]
+    )
+    res = client.post("/api/research/stream", json={"question": "How is Tesla doing?"})
+    assert res.status_code == 200
+    assert res.headers["content-type"].startswith("text/event-stream")
+    events = parse_sse(res.text)
+    assert [kind for kind, _ in events] == ["step", "step", "answer"]
+    assert events[0][1]["tool"] == "search_news"
+    assert events[2][1]["answer"] == "Profit fell 20% [1]."
+    assert events[2][1]["cited"] == [1]
+
+
+def test_stream_reports_upstream_error_as_event(client, fakes, monkeypatch):
+    def boom(self, messages, *, first, final):
+        raise UpstreamError("openai", "rate limited")
+
+    monkeypatch.setattr(agent_module.ResearchAgent, "_call_model", boom)
+    res = client.post("/api/research/stream", json={"question": "anything"})
+    assert res.status_code == 200  # the stream itself succeeds; the error is an event
+    assert parse_sse(res.text) == [("error", {"detail": "rate limited", "service": "openai"})]

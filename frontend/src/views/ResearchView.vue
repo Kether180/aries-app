@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, onUnmounted, ref } from 'vue'
 
-import { api } from '@/api'
+import { ApiError, api } from '@/api'
 import CitedAnswer from '@/components/CitedAnswer.vue'
-import type { ResearchResponse } from '@/types'
+import type { ResearchResponse, ResearchStep } from '@/types'
 
 const EXAMPLES = [
   'How is Tesla doing this quarter?',
@@ -18,8 +18,20 @@ const TOOL_LABELS: Record<string, string> = {
 
 const question = ref('')
 const result = ref<ResearchResponse | null>(null)
+const steps = ref<ResearchStep[]>([]) // filled live while the agent runs
 const loading = ref(false)
 const error = ref<string | null>(null)
+const elapsed = ref(0)
+let timer: ReturnType<typeof setInterval> | undefined
+
+// What the agent is doing right now, inferred from the last step it finished
+const currentActivity = computed(() => {
+  if (!loading.value) return ''
+  const last = steps.value[steps.value.length - 1]
+  if (!last) return 'Deciding what to search'
+  if (last.tool === 'search_news') return 'Reading the results and picking articles to analyse'
+  return 'Writing the answer, or analysing more articles'
+})
 
 async function research(q: string) {
   const trimmed = q.trim()
@@ -28,16 +40,22 @@ async function research(q: string) {
   loading.value = true
   error.value = null
   result.value = null
+  steps.value = []
+  elapsed.value = 0
+  timer = setInterval(() => elapsed.value++, 1000)
   try {
-    result.value = await api.research(trimmed)
+    result.value = await api.researchStream(trimmed, (step) => steps.value.push(step))
   } catch (e) {
-    error.value = (e as Error).message
+    error.value = e instanceof ApiError ? e.message : 'Connection lost while researching. Please try again.'
   } finally {
     loading.value = false
+    clearInterval(timer)
   }
 }
 
-function describe(step: ResearchResponse['steps'][number]): string {
+onUnmounted(() => clearInterval(timer))
+
+function describe(step: ResearchStep): string {
   if (step.tool === 'search_news') return `“${step.input.query}”`
   if (step.tool === 'analyze_articles') return `${(step.input.urls as string[] | undefined)?.length ?? 0} article(s)`
   return JSON.stringify(step.input)
@@ -65,19 +83,15 @@ function describe(step: ResearchResponse['steps'][number]): string {
       </button>
     </form>
 
-    <div v-if="!result && !loading" class="chips">
+    <div v-if="!result && !loading && !steps.length" class="chips">
       <button v-for="ex in EXAMPLES" :key="ex" class="chip" @click="research(ex)">{{ ex }}</button>
     </div>
   </section>
 
-  <p v-if="loading" class="muted working">
-    Searching the news and analysing articles. This usually takes 10–20 seconds.
-  </p>
-
   <p v-if="error" class="error-box">{{ error }}</p>
 
-  <template v-if="result">
-    <section class="panel">
+  <Transition name="fade">
+    <section v-if="result" class="panel">
       <h2>Answer</h2>
       <CitedAnswer
         :answer="result.answer"
@@ -86,12 +100,17 @@ function describe(step: ResearchResponse['steps'][number]): string {
         anchor-prefix="research-source"
       />
     </section>
+  </Transition>
 
-    <section class="panel">
-      <h2>What the agent did</h2>
-      <ol class="steps">
-        <li v-for="(step, i) in result.steps" :key="i">
-          <span class="step-num">{{ i + 1 }}</span>
+  <section v-if="steps.length || loading" class="panel" aria-live="polite">
+    <div class="panel-head">
+      <h2>{{ loading ? 'What the agent is doing' : 'What the agent did' }}</h2>
+      <span v-if="loading" class="muted elapsed">{{ elapsed }}s</span>
+    </div>
+    <ol class="steps">
+      <TransitionGroup name="fade">
+        <li v-for="(step, i) in steps" :key="i">
+          <span class="step-num done">✓</span>
           <details>
             <summary>
               <strong>{{ TOOL_LABELS[step.tool] ?? step.tool }}</strong>
@@ -100,9 +119,13 @@ function describe(step: ResearchResponse['steps'][number]): string {
             <pre>{{ step.output }}</pre>
           </details>
         </li>
-      </ol>
-    </section>
-  </template>
+      </TransitionGroup>
+      <li v-if="loading" class="pending">
+        <span class="step-num"><span class="spinner" aria-hidden="true" /></span>
+        <span class="muted">{{ currentActivity }}…</span>
+      </li>
+    </ol>
+  </section>
 </template>
 
 <style scoped>
@@ -135,9 +158,6 @@ h1 {
   white-space: normal;
   text-align: left;
 }
-.working {
-  margin: 0 0 16px;
-}
 .panel {
   margin-bottom: 16px;
   padding: 16px;
@@ -148,6 +168,15 @@ h1 {
 .panel h2 {
   margin: 0 0 10px;
   font-size: 1.05rem;
+}
+.panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.elapsed {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.85rem;
 }
 .steps {
   margin: 0;
@@ -162,18 +191,31 @@ h1 {
   gap: 10px;
   align-items: flex-start;
 }
+.steps li.pending {
+  align-items: center;
+}
 .step-num {
   flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 22px;
   height: 22px;
   margin-top: 1px;
   border-radius: 50%;
   font-size: 0.75rem;
   font-weight: 700;
-  line-height: 22px;
-  text-align: center;
   color: var(--muted);
   background: var(--surface-2);
+}
+.step-num.done {
+  color: var(--positive);
+  background: color-mix(in srgb, var(--positive) 14%, transparent);
+}
+.step-num .spinner {
+  width: 12px;
+  height: 12px;
+  color: var(--accent);
 }
 details {
   flex: 1;

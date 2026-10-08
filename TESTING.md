@@ -52,13 +52,14 @@ On the first request after a deploy, free hosting tiers can take 30 to 60 second
    - one italic sentence explaining the label
 4. The box above the cards now says "1/10 analysed" and shows a sentiment bar.
 5. Click **Analyse all**. The remaining cards analyse three at a time. When done, the box says "10/10 analysed" and the bar shows the split, for example "6 neutral (60%), 4 negative (40%)".
-6. Reload the page. All cards still show their analysis (loaded from the database) and no new OpenAI calls are made.
-7. Search for a nonsense word such as `qwzxv`. Expected: "No articles found. Try a broader search."
+6. Click **6 neutral** in the legend. Only neutral cards remain, the other bar segments dim, and a **Show all** link appears. Click it to reset.
+7. Reload the page. All cards still show their analysis (loaded from the database) and no new OpenAI calls are made.
+8. Search for a nonsense word such as `qwzxv`. Expected: "No articles found. Try a broader search."
 
 ### Research page
 
 1. Click **Research** in the header.
-2. Type `How is Tesla doing this quarter?` and click **Research**. The button shows "Researching..." for 10 to 20 seconds.
+2. Type `How is Tesla doing this quarter?` and click **Research**. A "What the agent is doing" panel appears with a timer, and each step shows up as the agent finishes it ("Searched the news", then "Analysed articles"), with the current activity underneath. The whole run takes 10 to 20 seconds.
 3. Expected result:
    - an **Answer** of 2 to 5 sentences with small numbered chips like `1` and `2` after sentences
    - a numbered list of sources under the answer; cited ones are fully visible, uncited ones are dimmed
@@ -71,7 +72,7 @@ On the first request after a deploy, free hosting tiers can take 30 to 60 second
 1. Click **Library**. The articles analysed so far are listed newest first. The box at the top shows the count, the average score and a sentiment bar.
 2. Click **Negative** in the filter. Only negative articles remain and the count updates. Click **All** to reset.
 3. Type part of a title in the filter box. The list narrows as you type.
-4. In **Ask your library**, click the suggestion "What is the overall mood of the news?". Expected: an answer with citation chips and a source list, within a few seconds.
+4. In **Ask your library**, click the suggestion "What is the overall mood of the news?". Expected: an answer with citation chips and a source list, within a few seconds. **Ask another question** brings the suggestions back.
 5. Ask something unrelated to what you analysed, such as `What is the weather in Lima?`. Expected: the answer says the sources do not cover it.
 6. Click **Delete** on one card and confirm. The card disappears and the count goes down by one.
 

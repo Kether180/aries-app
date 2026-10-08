@@ -4,6 +4,7 @@ import type {
   AskResponse,
   NewsArticle,
   ResearchResponse,
+  ResearchStep,
   NewsSearchResponse,
   Sentiment,
   SentimentStats,
@@ -61,4 +62,39 @@ export const api = {
 
   research: (question: string) =>
     request<ResearchResponse>('/api/research', { method: 'POST', body: JSON.stringify({ question }) }),
+
+  // Same as research(), but reports each agent step as it happens (server-sent events over POST)
+  researchStream: async (question: string, onStep: (step: ResearchStep) => void): Promise<ResearchResponse> => {
+    const res = await fetch('/api/research/stream', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question }),
+    })
+    if (!res.ok || !res.body) {
+      const body = await res.json().catch(() => null)
+      throw new ApiError(res.status, typeof body?.detail === 'string' ? body.detail : res.statusText)
+    }
+    const reader = res.body.pipeThrough(new TextDecoderStream()).getReader()
+    let buffer = ''
+    let answer: ResearchResponse | null = null
+    for (;;) {
+      const { value, done } = await reader.read()
+      if (done) break
+      buffer += value
+      // Events are separated by a blank line; keep any incomplete trailing event in the buffer
+      const blocks = buffer.split('\n\n')
+      buffer = blocks.pop() ?? ''
+      for (const block of blocks) {
+        const event = /^event: (.+)$/m.exec(block)?.[1]
+        const data = /^data: (.+)$/m.exec(block)?.[1]
+        if (!event || !data) continue
+        const payload = JSON.parse(data)
+        if (event === 'step') onStep(payload as ResearchStep)
+        else if (event === 'answer') answer = payload as ResearchResponse
+        else if (event === 'error') throw new ApiError(502, payload.detail ?? 'Research failed')
+      }
+    }
+    if (!answer) throw new ApiError(502, 'The research ended without an answer')
+    return answer
+  },
 }

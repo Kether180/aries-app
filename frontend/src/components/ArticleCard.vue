@@ -43,14 +43,16 @@ const imageFailed = ref(false)
 
       <p v-if="!analysis" class="description">{{ article.description }}</p>
 
-      <section v-if="analysis" class="analysis">
-        <div class="analysis-head">
-          <span class="label">AI summary</span>
-          <SentimentBadge :sentiment="analysis.sentiment" :score="analysis.sentiment_score" />
-        </div>
-        <p class="summary">{{ analysis.summary }}</p>
-        <p class="reason">{{ analysis.sentiment_reason }}</p>
-      </section>
+      <Transition name="fade" appear>
+        <section v-if="analysis" class="analysis">
+          <div class="analysis-head">
+            <span class="label">AI summary</span>
+            <SentimentBadge :sentiment="analysis.sentiment" :score="analysis.sentiment_score" />
+          </div>
+          <p class="summary">{{ analysis.summary }}</p>
+          <p class="reason">{{ analysis.sentiment_reason }}</p>
+        </section>
+      </Transition>
 
       <p v-if="error" class="error">{{ error }}</p>
 

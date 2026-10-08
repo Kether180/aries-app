@@ -140,6 +140,9 @@ async function analyseAll() {
       </select>
       <button class="primary" type="submit" :disabled="loading">Search</button>
     </form>
+    <p v-if="country" class="muted country-hint">
+      Showing the {{ COUNTRIES.find(([c]) => c === country)?.[1] }} press in its own language, summarised in English.
+    </p>
 
     <div class="chips">
       <button
@@ -250,6 +253,10 @@ async function analyseAll() {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+.country-hint {
+  margin: 8px 0 0;
+  font-size: 0.85rem;
 }
 .value-points {
   margin: 0;

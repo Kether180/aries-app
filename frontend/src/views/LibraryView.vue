@@ -99,9 +99,11 @@ onMounted(() => {
         :selected="sentiment"
         @select="sentiment = $event"
       />
-      <SentimentHelp />
     </div>
   </section>
+
+  <!-- Outside the two-column header, so opening it does not stretch the stats card -->
+  <SentimentHelp v-if="stats && stats.total" class="labels-help" />
 
   <TopicMood v-if="stats && stats.total" @select="q = $event" />
 
@@ -217,6 +219,9 @@ onMounted(() => {
   display: flex;
   justify-content: center;
   margin-top: 16px;
+}
+.labels-help {
+  margin: -8px 0 20px;
 }
 @media (max-width: 700px) {
   .overview {

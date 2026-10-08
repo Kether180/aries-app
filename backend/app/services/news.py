@@ -83,7 +83,9 @@ def _fetch_gnews(query: str | None, lang: str, max_results: int, country: str | 
 
     if response.status_code != 200:
         logger.warning("GNews returned HTTP %s: %s", response.status_code, response.text[:200])
-    if response.status_code == 429:
+    # Per-second limit is a 429; the daily limit comes back as a 403 with a "request limit" message
+    daily_limit = response.status_code == 403 and "request limit" in response.text.lower()
+    if response.status_code == 429 or daily_limit:
         raise UpstreamError(
             "gnews", "GNews rate limit reached (free tier: 100 requests a day, 1 per second). Try again shortly.", 429
         )

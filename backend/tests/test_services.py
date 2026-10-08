@@ -158,3 +158,19 @@ def test_non_rate_limit_gnews_errors_still_raise(monkeypatch):
     )
     with pytest.raises(UpstreamError):
         news.fetch_news("x")
+
+
+def test_rss_fallback_when_gnews_daily_limit_is_a_403(monkeypatch):
+    monkeypatch.setattr(news.settings, "gnews_api_key", "test-key")
+    news._cache.clear()
+
+    def fake_get(url, params, timeout, follow_redirects=False):
+        if url.startswith(news.BASE_URL):
+            body = {"errors": ["You have reached your request limit for today, the next reset will be tomorrow"]}
+            return SimpleNamespace(
+                status_code=403, json=lambda: body, headers={"content-type": "application/json"}, text=str(body)
+            )
+        return SimpleNamespace(status_code=200, text=RSS_SAMPLE, raise_for_status=lambda: None)
+
+    monkeypatch.setattr(news.httpx, "get", fake_get)
+    assert len(news.fetch_news("rates")) == 1  # served by the RSS fallback

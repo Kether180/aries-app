@@ -7,15 +7,18 @@ Sentiment = Literal["positive", "neutral", "negative"]
 
 
 class NewsArticle(BaseModel):
-    """An article from the news API, before (or regardless of) analysis."""
+    """An article from the news API, before (or regardless of) analysis.
 
-    url: HttpUrl
-    title: str
+    Length limits match the database columns, so oversized input is a 422, not a database error.
+    """
+
+    url: HttpUrl = Field(max_length=2048)
+    title: str = Field(min_length=1, max_length=1024)
     description: str | None = None
     content: str | None = None
-    source_name: str | None = None
-    source_url: str | None = None
-    image_url: str | None = None
+    source_name: str | None = Field(default=None, max_length=255)
+    source_url: str | None = Field(default=None, max_length=2048)
+    image_url: str | None = Field(default=None, max_length=2048)
     published_at: datetime | None = None
 
 

@@ -81,6 +81,8 @@ def test_delete_article(client, fake_ai):
 
 def test_invalid_payload_rejected(client, fake_ai):
     assert client.post("/api/articles", json={"title": "no url"}).status_code == 422
+    assert client.post("/api/articles", json={"url": "https://example.com/x", "title": "x" * 1025}).status_code == 422
+    assert client.post("/api/articles", json={"url": "https://example.com/x", "title": ""}).status_code == 422
     assert client.get("/api/articles", params={"sentiment": "angry"}).status_code == 422
 
 

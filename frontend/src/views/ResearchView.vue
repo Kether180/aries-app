@@ -156,18 +156,10 @@ function describe(step: ResearchStep): string {
 </template>
 
 <style scoped>
-.hero {
-  margin: 8px 0 24px;
-}
-h1 {
-  margin: 0 0 6px;
-  font-size: clamp(1.6rem, 4vw, 2.2rem);
-  letter-spacing: -0.02em;
-}
 .search {
   display: flex;
   gap: 8px;
-  margin-top: 16px;
+  margin-top: 18px;
 }
 .search input {
   flex: 1;
@@ -181,20 +173,14 @@ h1 {
 }
 .chip {
   height: auto;
-  min-height: 30px;
+  min-height: 32px;
   white-space: normal;
   text-align: left;
 }
-.panel {
-  margin-bottom: 16px;
-  padding: 16px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--surface);
-}
 .panel h2 {
-  margin: 0 0 10px;
+  margin: 0 0 12px;
   font-size: 1.05rem;
+  font-weight: 700;
 }
 .panel-head {
   display: flex;
@@ -205,17 +191,29 @@ h1 {
   font-variant-numeric: tabular-nums;
   font-size: 0.85rem;
 }
+/* Timeline: a vertical line connects the step markers */
 .steps {
+  position: relative;
   margin: 0;
   padding: 0;
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
+}
+.steps::before {
+  content: '';
+  position: absolute;
+  left: 11px;
+  top: 12px;
+  bottom: 12px;
+  width: 2px;
+  background: var(--border);
 }
 .steps > li {
+  position: relative;
   display: flex;
-  gap: 10px;
+  gap: 12px;
   align-items: flex-start;
 }
 .steps > li.pending {
@@ -226,18 +224,18 @@ h1 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
-  margin-top: 1px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   font-size: 0.75rem;
   font-weight: 700;
   color: var(--muted);
-  background: var(--surface-2);
+  background: var(--surface-3);
+  box-shadow: 0 0 0 3px var(--surface);
 }
 .step-num.done {
-  color: var(--positive);
-  background: color-mix(in srgb, var(--positive) 14%, transparent);
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
 }
 .step-num .spinner {
   width: 12px;
@@ -249,7 +247,7 @@ h1 {
   min-width: 0;
 }
 .step-title {
-  margin: 0 0 6px;
+  margin: 1px 0 8px;
 }
 .step-text {
   margin: 0;
@@ -267,21 +265,21 @@ h1 {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 10px;
-  border-radius: 8px;
+  padding: 9px 12px;
+  border-radius: 10px;
   background: var(--surface-2);
 }
 .item-num {
   flex: none;
   width: 22px;
   height: 22px;
-  border-radius: 50%;
-  font-size: 0.75rem;
+  border-radius: 7px;
+  font-size: 0.72rem;
   font-weight: 700;
   line-height: 22px;
   text-align: center;
-  color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent-text);
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
 }
 .item-body {
   flex: 1;
@@ -295,20 +293,21 @@ h1 {
   white-space: nowrap;
   color: var(--text);
   font-size: 0.92rem;
+  font-weight: 500;
   text-decoration: none;
 }
 .item-body a:hover {
-  text-decoration: underline;
+  color: var(--accent);
 }
 .item-meta {
-  font-size: 0.78rem;
+  font-size: 0.76rem;
 }
 .raw {
-  margin-top: 6px;
+  margin-top: 8px;
 }
 .raw summary {
   cursor: pointer;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
 }
 pre {
   margin: 6px 0 0;

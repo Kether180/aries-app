@@ -1,6 +1,6 @@
 # Testing guide
 
-How to check that NewsPulse works, from the automated suite to a manual walk-through of every feature. Takes about 15 minutes end to end.
+How to check that AriesNews works, from the automated suite to a manual walk-through of every feature. Takes about 15 minutes end to end.
 
 ## 1. Automated tests
 
@@ -17,7 +17,7 @@ To run the same tests against a real Postgres (what CI does):
 ```bash
 docker compose up -d
 cd backend
-TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5433/newspulse uv run pytest -m "not llm"
+TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5433/ariesnews uv run pytest -m "not llm"
 ```
 
 Live tests against the real OpenAI and GNews APIs (needs both keys in `backend/.env`, uses about 1 GNews request and 10 OpenAI calls):
@@ -137,8 +137,8 @@ curl -i $BASE/api/health -H "X-Request-ID: 123e4567-e89b-12d3-a456-426614174000"
 ## 6. Docker
 
 ```bash
-docker build -t newspulse .
-docker run --rm --name newspulse -p 8000:8000 --env-file backend/.env newspulse
+docker build -t ariesnews .
+docker run --rm --name ariesnews -p 8000:8000 --env-file backend/.env ariesnews
 ```
 
 Expected log lines on start: Alembic "Running upgrade -> 0001", then "Application startup complete". Open http://localhost:8000 and repeat section 3. `docker ps` shows the container as "healthy" after about 30 seconds.

@@ -21,20 +21,24 @@ const imageFailed = ref(false)
 
 <template>
   <article class="card" :class="{ analysed: analysis, 'has-thumb': article.image_url && !imageFailed }">
-    <img
+    <a
       v-if="article.image_url && !imageFailed"
-      :src="article.image_url"
-      alt=""
-      class="thumb"
-      loading="lazy"
-      @error="imageFailed = true"
-    />
+      :href="article.url"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="thumb-link"
+      tabindex="-1"
+      aria-hidden="true"
+    >
+      <img :src="article.image_url" alt="" class="thumb" loading="lazy" @error="imageFailed = true" />
+    </a>
 
     <div class="body">
       <p class="meta">
         <span class="source">{{ article.source_name }}</span>
-        <span v-if="article.published_at"> · {{ timeAgo(article.published_at) }}</span>
-        <span v-if="analysis?.query" class="muted"> · from “{{ analysis.query }}”</span>
+        <span v-if="article.published_at" class="sep">·</span>
+        <span v-if="article.published_at">{{ timeAgo(article.published_at) }}</span>
+        <span v-if="analysis?.query" class="topic">{{ analysis.query }}</span>
       </p>
 
       <h3 class="title">
@@ -46,7 +50,15 @@ const imageFailed = ref(false)
       <Transition name="fade" appear>
         <section v-if="analysis" class="analysis">
           <div class="analysis-head">
-            <span class="label">AI summary</span>
+            <span class="label">
+              <svg viewBox="0 0 16 16" aria-hidden="true">
+                <path
+                  d="M8 1.5l1.6 3.9 3.9 1.6-3.9 1.6L8 12.5 6.4 8.6 2.5 7l3.9-1.6L8 1.5zM13 11l.7 1.8 1.8.7-1.8.7L13 16l-.7-1.8-1.8-.7 1.8-.7L13 11z"
+                  fill="currentColor"
+                />
+              </svg>
+              AI summary
+            </span>
             <SentimentBadge :sentiment="analysis.sentiment" :score="analysis.sentiment_score" />
           </div>
           <p class="summary">{{ analysis.summary }}</p>
@@ -72,73 +84,116 @@ const imageFailed = ref(false)
 .card {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 16px;
-  padding: 16px;
+  gap: 18px;
+  padding: 18px;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius);
   background: var(--surface);
+  box-shadow: var(--shadow);
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
+}
+.card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+  box-shadow: var(--shadow-hover);
 }
 .card.has-thumb {
-  grid-template-columns: 160px 1fr;
+  grid-template-columns: 168px 1fr;
+}
+.thumb-link {
+  display: block;
+  align-self: start;
 }
 .thumb {
-  width: 160px;
-  height: 110px;
+  display: block;
+  width: 168px;
+  height: 118px;
   object-fit: cover;
-  border-radius: 8px;
-  background: var(--border);
+  border-radius: 10px;
+  background: var(--surface-3);
 }
 .body {
   min-width: 0;
 }
 .meta {
-  margin: 0 0 4px;
-  font-size: 0.8rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 6px;
+  font-size: 0.78rem;
   color: var(--muted);
 }
 .source {
   font-weight: 600;
   color: var(--text);
 }
+.sep {
+  opacity: 0.6;
+}
+.topic {
+  margin-left: 2px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 0.72rem;
+}
 .title {
   margin: 0 0 6px;
-  font-size: 1.05rem;
+  font-size: 1.08rem;
+  font-weight: 700;
   line-height: 1.35;
+  letter-spacing: -0.01em;
 }
 .title a {
   color: inherit;
   text-decoration: none;
 }
 .title a:hover {
-  text-decoration: underline;
+  color: var(--accent);
 }
 .description {
   margin: 0;
   color: var(--muted);
-  font-size: 0.92rem;
+  font-size: 0.93rem;
 }
 .analysis {
-  margin-top: 8px;
-  padding: 12px;
-  border-radius: 8px;
+  margin-top: 10px;
+  padding: 12px 14px;
+  border-left: 3px solid var(--accent);
+  border-radius: 10px;
   background: var(--surface-2);
 }
 .analysis-head {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 .label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--accent);
+}
+.label svg {
+  width: 13px;
+  height: 13px;
 }
 .summary {
   margin: 0 0 6px;
+  line-height: 1.55;
 }
 .reason {
   margin: 0;
@@ -164,7 +219,7 @@ const imageFailed = ref(false)
   }
   .thumb {
     width: 100%;
-    height: 160px;
+    height: 170px;
   }
 }
 </style>

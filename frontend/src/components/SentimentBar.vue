@@ -38,21 +38,22 @@ function toggle(key: Sentiment) {
         class="segment"
         :class="[s.key, { dim: selected && selected !== s.key }]"
         :style="{ width: `${s.percent}%` }"
-      />
+      >
+        <span v-if="s.percent >= 12" class="pct">{{ Math.round(s.percent) }}%</span>
+      </div>
     </div>
     <ul class="legend">
       <li v-for="s in segments" :key="s.key">
         <component
           :is="selectable ? 'button' : 'span'"
           class="entry"
-          :class="{ active: selected === s.key, clickable: selectable }"
+          :class="[s.key, { active: selected === s.key, clickable: selectable }]"
           :aria-pressed="selectable ? selected === s.key : undefined"
           :disabled="selectable && !s.count ? true : undefined"
           @click="selectable && toggle(s.key)"
         >
-          <span class="dot" :class="s.key" />
-          {{ s.count }} {{ s.key }}
-          <span class="muted">({{ Math.round(s.percent) }}%)</span>
+          <span class="dot" />
+          <strong>{{ s.count }}</strong> {{ s.key }}
         </component>
       </li>
       <li v-if="selectable && selected">
@@ -65,73 +66,103 @@ function toggle(key: Sentiment) {
 <style scoped>
 .track {
   display: flex;
-  height: 10px;
+  height: 14px;
   border-radius: 999px;
   overflow: hidden;
-  background: var(--border);
+  background: var(--surface-3);
   gap: 2px;
 }
 .segment {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
   transition:
-    width 0.3s ease,
+    width 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
     opacity 0.2s ease;
 }
 .segment.dim {
   opacity: 0.25;
 }
+.pct {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.02em;
+  text-shadow: 0 1px 1px rgb(0 0 0 / 0.25);
+}
 .legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 12px;
-  margin: 8px 0 0;
+  gap: 6px 8px;
+  margin: 10px 0 0;
   padding: 0;
   list-style: none;
-  font-size: 0.85rem;
+  font-size: 0.84rem;
 }
 .entry {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  height: auto;
-  padding: 2px 6px;
-  margin: 0 -6px;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
   border: 1px solid transparent;
-  border-radius: 6px;
-  background: transparent;
+  border-radius: 999px;
+  background: var(--surface-2);
   color: var(--text);
   font: inherit;
-  font-size: 0.85rem;
+  font-size: 0.84rem;
+  font-weight: 500;
+  box-shadow: none;
+}
+.entry strong {
+  font-weight: 700;
 }
 .entry.clickable {
   cursor: pointer;
 }
 .entry.clickable:hover:not(:disabled) {
-  background: var(--surface-2);
+  background: var(--surface-3);
 }
 .entry.active {
-  border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border-color: var(--tone);
+  background: var(--tone-soft);
+  color: var(--tone);
 }
 .entry:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: default;
 }
 .clear {
   color: var(--accent);
+  background: var(--accent-soft);
 }
 .dot {
   display: inline-block;
   width: 8px;
   height: 8px;
   border-radius: 50%;
+  background: var(--tone);
 }
 .positive {
-  background: var(--positive);
+  --tone: var(--positive);
+  --tone-soft: var(--positive-soft);
 }
 .neutral {
-  background: var(--neutral);
+  --tone: var(--neutral);
+  --tone-soft: var(--neutral-soft);
 }
 .negative {
+  --tone: var(--negative);
+  --tone-soft: var(--negative-soft);
+}
+.segment.positive {
+  background: var(--positive);
+}
+.segment.neutral {
+  background: var(--neutral);
+}
+.segment.negative {
   background: var(--negative);
 }
 </style>

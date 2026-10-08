@@ -1,5 +1,5 @@
 [project]
-name = "news-analyzer"
+name = "ariesnews"
 version = "0.1.0"
 description = "Search news, summarise and score sentiment with OpenAI, store results in Postgres"
 requires-python = ">=3.12"

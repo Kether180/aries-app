@@ -141,37 +141,58 @@ onMounted(() => {
 <style scoped>
 .overview {
   display: grid;
-  grid-template-columns: 1fr minmax(260px, 380px);
+  grid-template-columns: 1fr minmax(280px, 400px);
   gap: 24px;
   align-items: end;
-  margin: 8px 0 24px;
+  margin: 4px 0 24px;
 }
-h1 {
+.overview h1 {
   margin: 0 0 6px;
-  font-size: clamp(1.6rem, 4vw, 2.2rem);
-  letter-spacing: -0.02em;
+  font-size: clamp(1.75rem, 4vw, 2.4rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
 }
 .stats {
-  padding: 16px;
+  position: relative;
+  overflow: hidden;
+  padding: 16px 18px;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius);
   background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.stats::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
 }
 .numbers {
   display: flex;
-  gap: 24px;
+  gap: 10px;
   margin-bottom: 12px;
 }
-.numbers div {
+.numbers > div {
+  flex: 1;
   display: flex;
   flex-direction: column;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--surface-2);
 }
 .numbers strong {
-  font-size: 1.4rem;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
+  line-height: 1.1;
 }
 .numbers span {
-  font-size: 0.8rem;
+  font-size: 0.76rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 .filters {
   display: flex;
@@ -184,7 +205,7 @@ h1 {
   min-width: 200px;
 }
 .results-count {
-  margin: 0 0 8px;
+  margin: 0 0 10px;
   font-size: 0.85rem;
 }
 .more {

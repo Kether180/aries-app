@@ -160,18 +160,10 @@ async function analyseAll() {
 </template>
 
 <style scoped>
-.hero {
-  margin: 8px 0 24px;
-}
-h1 {
-  margin: 0 0 6px;
-  font-size: clamp(1.6rem, 4vw, 2.2rem);
-  letter-spacing: -0.02em;
-}
 .search {
   display: flex;
   gap: 8px;
-  margin-top: 16px;
+  margin-top: 18px;
 }
 .search input {
   flex: 1;
@@ -184,11 +176,21 @@ h1 {
   margin-top: 12px;
 }
 .toolbar {
+  position: relative;
+  overflow: hidden;
   margin-bottom: 16px;
-  padding: 16px;
+  padding: 16px 18px;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius);
   background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.toolbar::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
 }
 .toolbar-head {
   display: flex;
@@ -201,11 +203,12 @@ h1 {
 .toolbar h2 {
   margin: 0;
   font-size: 1.05rem;
+  font-weight: 700;
 }
 .count {
   margin-left: 8px;
   font-size: 0.85rem;
-  font-weight: 400;
+  font-weight: 500;
 }
 .hint {
   margin: 0;

@@ -35,7 +35,7 @@ async def lifespan(app: FastAPI):
 
 # Database tables are managed by Alembic migrations: run `alembic upgrade head` before starting.
 app = FastAPI(
-    title="NewsPulse API",
+    title="AriesNews API",
     version="0.1.0",
     description="Search news, summarise and score sentiment with OpenAI, and ask questions over the results.",
     lifespan=lifespan,

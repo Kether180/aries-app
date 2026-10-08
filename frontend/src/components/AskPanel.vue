@@ -70,15 +70,21 @@ async function ask(q: string) {
 
 <style scoped>
 .ask {
+  position: relative;
+  overflow: hidden;
   margin-bottom: 24px;
-  padding: 16px;
+  padding: 18px;
   border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--surface);
+  border-radius: var(--radius);
+  background:
+    radial-gradient(70% 120% at 100% 0%, color-mix(in srgb, var(--accent-2) 10%, transparent), transparent 60%),
+    var(--surface);
+  box-shadow: var(--shadow);
 }
 .ask-head h2 {
   margin: 0 0 2px;
   font-size: 1.05rem;
+  font-weight: 700;
 }
 .ask-head p {
   margin: 0 0 12px;
@@ -100,7 +106,7 @@ async function ask(q: string) {
 }
 .chip {
   height: auto;
-  min-height: 30px;
+  min-height: 32px;
   white-space: normal;
   text-align: left;
 }

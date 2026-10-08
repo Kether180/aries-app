@@ -1,4 +1,4 @@
-# NewsPulse
+# AriesNews
 
 Search recent news, get an AI summary and sentiment score per article, and see how coverage of a topic leans. Ask questions and get answers built only from the analysed articles, with sources cited.
 
@@ -43,11 +43,11 @@ npm run migration -- "describe change"   # generate a migration from the models
 One container runs the API and the built frontend:
 
 ```bash
-docker build -t newspulse .
-docker run --rm --name newspulse -p 8000:8000 --env-file backend/.env newspulse
+docker build -t ariesnews .
+docker run --rm --name ariesnews -p 8000:8000 --env-file backend/.env ariesnews
 ```
 
-Open http://localhost:8000. Migrations run on start. For a local Postgres: `docker compose up -d`, then set `DATABASE_URL=postgresql://postgres:postgres@localhost:5433/newspulse`.
+Open http://localhost:8000. Migrations run on start. For a local Postgres: `docker compose up -d`, then set `DATABASE_URL=postgresql://postgres:postgres@localhost:5433/ariesnews`.
 
 ## What the app does
 

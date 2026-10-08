@@ -1,5 +1,5 @@
 {
-  "name": "newspulse",
+  "name": "ariesnews",
   "private": true,
   "description": "Task runner for the whole project. Backend lives in ./backend (uv), frontend in ./frontend (npm).",
   "scripts": {

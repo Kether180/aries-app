@@ -53,6 +53,7 @@ Open http://localhost:8000. Migrations run on start. For a local Postgres: `dock
 
 **Discover** (`/`)
 - Opens on top headlines. Search any topic or pick a suggestion, worldwide or in one country (GNews country filter).
+- If the GNews daily quota is used up (or no key is set), searches come from the Google News RSS feed instead: no key, no quota, but no images or article text.
 - "Summarise & score" per article, or "Analyse all" for the page.
 - A bar shows how coverage of the current search leans, with a switch to show only positive, neutral or negative stories.
 - Already-analysed articles show their stored result; nothing is sent to OpenAI twice.
@@ -180,7 +181,7 @@ Design decisions:
 - `POST /api/articles` is idempotent per URL (unique column). Re-posting returns the stored record with no OpenAI call, so "Analyse all" is safe to repeat. A race on the same URL is caught by the constraint.
 - `/ask` and `/research` are POST actions, not resources. They store nothing of their own.
 - The client sends the article body because GNews has no fetch-by-URL. Caching search results server-side would close the gap of a client sending edited text.
-- GNews free tier: 100 requests/day. Identical searches are cached for 10 minutes.
+- GNews free tier: 100 requests/day. Identical searches are cached for 10 minutes. When the quota is exhausted the app falls back to Google News RSS automatically.
 - Routers only do HTTP. Queries live in `services/articles.py`; external calls in `services/news.py`, `services/ai.py`, `services/agent.py`.
 
 ## Project layout

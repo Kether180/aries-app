@@ -133,7 +133,7 @@ curl -i $BASE/api/health -H "X-Request-ID: 123e4567-e89b-12d3-a456-426614174000"
 
 - Remove `GNEWS_API_KEY` from `.env` and restart: searches return 503 `{"detail":"GNEWS_API_KEY is not configured","service":"gnews"}` and the UI shows that message. The library and ask features still work.
 - Remove `OPENAI_API_KEY`: analysing returns 503 with the same shape, and the card shows a Retry button.
-- The GNews free tier allows 100 requests a day. Past that, searches return 429 "daily request limit reached" and the UI shows it. Identical searches within 10 minutes are served from cache and do not count.
+- The GNews free tier allows 100 requests a day. Past that, searches switch to the Google News RSS feed automatically: results still appear, but without pictures (cards show the publisher's icon instead) and with shorter text for the analysis. Identical searches within 10 minutes are served from cache and do not count.
 
 ## 6. Docker
 

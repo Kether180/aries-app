@@ -174,3 +174,34 @@ def test_rss_fallback_when_gnews_daily_limit_is_a_403(monkeypatch):
 
     monkeypatch.setattr(news.httpx, "get", fake_get)
     assert len(news.fetch_news("rates")) == 1  # served by the RSS fallback
+
+
+def test_country_filter_uses_the_local_language(monkeypatch):
+    monkeypatch.setattr(news.settings, "gnews_api_key", "test-key")
+    news._cache.clear()
+    seen = []
+
+    def fake_get(url, params, timeout, follow_redirects=False):
+        seen.append(params)
+        return SimpleNamespace(status_code=200, json=lambda: {"articles": []}, headers={}, text="")
+
+    monkeypatch.setattr(news.httpx, "get", fake_get)
+    news.fetch_news("klimaat", country="nl")
+    news.fetch_news("climate", country="gb")
+    news.fetch_news("climate")
+    news.fetch_news("climate", lang="en", country="nl")  # explicit language wins
+    assert [(p["lang"], p.get("country")) for p in seen] == [("nl", "nl"), ("en", "gb"), ("en", None), ("en", "nl")]
+
+
+def test_rss_fallback_uses_the_local_edition(monkeypatch):
+    monkeypatch.setattr(news.settings, "gnews_api_key", "")
+    news._cache.clear()
+    seen = []
+
+    def fake_get(url, params, timeout, follow_redirects=False):
+        seen.append(params)
+        return SimpleNamespace(status_code=200, text=RSS_SAMPLE, raise_for_status=lambda: None)
+
+    monkeypatch.setattr(news.httpx, "get", fake_get)
+    news.fetch_news(None, country="de")
+    assert seen[0] == {"hl": "de-DE", "gl": "DE", "ceid": "DE:de"}

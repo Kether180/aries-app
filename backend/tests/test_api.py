@@ -111,6 +111,7 @@ def test_news_country_param_is_passed_through(client, fake_ai, monkeypatch):
     assert client.get("/api/news", params={"q": "x", "country": "DE"}).json()["country"] == "de"
     assert seen["country"] == "de"
     assert client.get("/api/news", params={"country": "deu"}).status_code == 422
+    assert client.get("/api/news", params={"country": ""}).status_code == 200  # empty means worldwide
 
 
 def test_delete_article(client, fake_ai):

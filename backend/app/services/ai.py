@@ -74,6 +74,7 @@ ANALYSIS_PROMPT = """You are a news analyst. Given a news article, produce:
   for how clear it is: 0.7 or more for unmistakable, 0.3 to 0.6 for likely, under 0.3 only for
   faint. Neutral is between -0.2 and 0.2. Do not use exactly 0 unless there is truly no direction.
 - sentiment_reason: one short sentence saying who is affected and why it is good or bad for them.
+Write the summary and the reason in English, whatever language the article is in.
 Only use information in the article. The text may be truncated; do not invent details."""
 
 

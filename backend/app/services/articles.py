@@ -7,7 +7,7 @@ from sqlalchemy import Text, cast, func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.models import Article, search_document
+from app.models import TS_CONFIG, Article, search_document
 from app.schemas import ArticleCreate, Sentiment, SentimentStats
 from app.services.ai import Analysis
 
@@ -114,7 +114,7 @@ def search_relevant(db: Session, question: str, limit: int) -> Sequence[Article]
         document = search_document()
         # plainto_tsquery stems and drops stopwords, giving 'a' & 'b'; swap & for | to match any term
         tsquery = func.to_tsquery(
-            "english", func.replace(cast(func.plainto_tsquery("english", question), Text), "&", "|")
+            TS_CONFIG, func.replace(cast(func.plainto_tsquery(TS_CONFIG, question), Text), "&", "|")
         )
         rank = func.ts_rank_cd(document, tsquery)
         stmt = select(Article).where(document.op("@@")(tsquery)).order_by(rank.desc(), Article.created_at.desc())

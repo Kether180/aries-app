@@ -228,9 +228,14 @@ frontend/
 
 ## Deployment
 
-- `render.yaml`: one web service from the Dockerfile plus a free Postgres. In Render, New → Blueprint, pick the repo, enter the two API keys.
-- Image runs as a non-root user, has a health check on `/api/health`, and applies migrations before starting.
-- Free tier sleeps after 15 minutes idle; the first request after that takes 30 to 60 seconds.
+Railway (one project holds the app and the database):
+
+1. New Project → Deploy from GitHub repo → `Kether180/aries-app`. `railway.json` tells Railway to build the Dockerfile and to health-check `/api/health`.
+2. In the project, Create → Database → PostgreSQL.
+3. On the app service, Variables: `DATABASE_URL` = `${{Postgres.DATABASE_URL}}`, plus `GNEWS_API_KEY` and `OPENAI_API_KEY`.
+4. Settings → Networking → Generate Domain.
+
+Migrations run on start. The image runs as a non-root user with a health check. `render.yaml` is also included for Render (web service plus an external Postgres such as Neon).
 
 ## Next steps
 

@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 
-from sqlalchemy import DateTime, Float, Index, String, Text, func
+from sqlalchemy import DateTime, Float, Index, String, Text, func, literal_column
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db import Base
@@ -38,6 +38,11 @@ class Article(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
 
 
+# The text-search configuration must be a SQL literal, not a bound parameter: it is part of an
+# index definition (DDL), and Postgres needs a regconfig there.
+TS_CONFIG = literal_column("'english'")
+
+
 def search_document():
     """Postgres full-text search vector for an article, used for RAG retrieval.
 
@@ -52,7 +57,7 @@ def search_document():
         + " "
         + func.coalesce(Article.query, "")
     )
-    return func.to_tsvector("english", text)
+    return func.to_tsvector(TS_CONFIG, text)
 
 
 Index("ix_articles_search", search_document(), postgresql_using="gin").ddl_if(dialect="postgresql")

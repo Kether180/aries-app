@@ -1,4 +1,6 @@
-# Render Blueprint: one Docker web service + a Postgres database.
+# Render Blueprint: one free web service built from the Dockerfile.
+# The database is external (e.g. a free Neon Postgres): paste its connection string as DATABASE_URL.
+# Render's own Postgres would also work, but it requires a card on file even on the free plan.
 services:
   - type: web
     name: newspulse
@@ -7,16 +9,10 @@ services:
     healthCheckPath: /api/health
     envVars:
       - key: DATABASE_URL
-        fromDatabase:
-          name: newspulse-db
-          property: connectionString
+        sync: false
       - key: GNEWS_API_KEY
         sync: false
       - key: OPENAI_API_KEY
         sync: false
       - key: OPENAI_MODEL
         value: gpt-4.1-nano
-
-databases:
-  - name: newspulse-db
-    plan: free

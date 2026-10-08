@@ -34,7 +34,8 @@ Run `npm run check` before committing. CI fails on lint or format issues. CI run
 - `backend/app/schemas.py`: request and response models. `frontend/src/types.ts` mirrors them; update both.
 - `backend/app/models.py`: the single `articles` table. Any change needs a migration.
 - `frontend/src/api.ts`: the only place that calls `fetch`. Add a method there for a new endpoint. `researchStream()` parses the SSE stream.
-- `frontend/src/components/`: `ArticleCard` (one article, placeholder tile when the image fails), `SentimentBadge` (label in words plus meter; tapping it opens the help note), `SentimentBar`, `SentimentHelp`, `TopicMood`, `AskPanel`, `CitedAnswer`.
+- `frontend/src/components/`: `SearchBar` and `ResultsToolbar` (the Discover page's search row and results header), `ResearchSteps` (the "Behind this answer" panel), `ArticleCard` (one article, placeholder tile when the image fails), `SentimentBadge` (label in words plus meter; tapping it opens the help note), `SentimentBar`, `SentimentHelp`, `TopicMood`, `AskPanel`, `CitedAnswer`. Views hold page state and API calls only.
+- `frontend/src/constants.ts`: topics, countries, filter options and example questions shared by views.
 - Tests live in `backend/tests/`. Mock external calls at the router module (`monkeypatch.setattr(articles_router, "analyze_article", ...)`), not at the service module, because routers import functions directly. Fake `fetch_news` must accept `country=None`.
 
 ## Conventions

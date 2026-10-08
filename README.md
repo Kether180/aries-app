@@ -220,8 +220,10 @@ frontend/
     api.ts                  typed API client
     types.ts                types matching backend schemas
     format.ts               date and score formatting
-    views/                  DiscoverView, ResearchView, LibraryView
-    components/             ArticleCard, SentimentBadge, SentimentBar, AskPanel, CitedAnswer
+    constants.ts            topics, countries, filter options, example questions
+    views/                  DiscoverView, ResearchView, LibraryView (page logic only)
+    components/             SearchBar, ResultsToolbar, ResearchSteps, ArticleCard, SentimentBadge,
+                            SentimentBar, SentimentHelp, TopicMood, AskPanel, CitedAnswer
 ```
 
 ## Tests and CI

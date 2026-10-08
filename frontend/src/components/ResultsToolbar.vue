@@ -24,10 +24,22 @@ defineEmits<{ analyseAll: []; 'update:filter': [value: Sentiment | null] }>()
       <h2>
         {{ activeQuery ? `Results for “${activeQuery}”` : 'Top headlines'
         }}<span v-if="country" class="muted where"> · {{ countryName(country) }}</span>
-        <span class="muted count" aria-live="polite">{{ analysedCount }}/{{ total }} analysed</span>
+        <span
+          class="muted count"
+          aria-live="polite"
+          title="Articles analysed before are shown from your library and are not sent for analysis again"
+        >
+          {{ analysedCount }} of {{ total }} {{ pendingCount ? 'already analysed' : 'analysed' }}
+        </span>
       </h2>
       <button v-if="pendingCount" class="primary" :disabled="analysingCount > 0" @click="$emit('analyseAll')">
-        {{ analysingCount ? `Analysing ${analysingCount}…` : `Analyse all ${pendingCount}` }}
+        {{
+          analysingCount
+            ? `Analysing ${analysingCount}…`
+            : analysedCount
+              ? `Analyse the other ${pendingCount}`
+              : `Analyse all ${pendingCount}`
+        }}
       </button>
     </div>
 

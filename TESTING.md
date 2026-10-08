@@ -54,7 +54,7 @@ On the first request after a deploy, free hosting tiers can take 30 to 60 second
 4. The box above the cards now says "1 of 10 already analysed" and shows a sentiment bar. Click **What do the labels mean?** under it for a plain-language explanation.
 5. Click **Analyse the other 9**. The remaining cards analyse three at a time. When done, the box says "10 of 10 analysed" and the bar shows the split, for example "6 neutral (60%), 4 negative (40%)".
 6. Click **Neutral** in the switch under the bar (or **6 neutral** in the legend). Only neutral cards remain and the other bar segments dim. Click **All** to reset. Tap any badge: the "What do the labels mean?" note opens.
-7. Reload the page. All cards still show their analysis (loaded from the database) and no new OpenAI calls are made.
+7. Reload the page. It starts fresh: cards show no analysis. Click **Analyse all** again: the results appear almost instantly, because they come from the database and nothing is sent to OpenAI twice.
 8. Search for a nonsense word such as `qwzxv`. Expected: "No articles found. Try a broader search."
 
 ### Research page

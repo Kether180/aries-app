@@ -37,7 +37,9 @@ async function load() {
   analyseErrors.clear()
   try {
     const res = await api.searchNews(query.value || undefined, country.value || undefined)
-    results.value = res.articles
+    // Every load starts fresh: saved analyses are not shown until the user asks. Analysing an article that
+    // is already in the library returns the stored result instantly, without another model call.
+    results.value = res.articles.map((a) => ({ ...a, analysis: null }))
     activeQuery.value = res.query
     sentimentFilter.value = null
   } catch (e) {

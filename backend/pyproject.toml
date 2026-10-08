@@ -1,0 +1,39 @@
+[project]
+name = "news-analyzer"
+version = "0.1.0"
+description = "Search news, summarise and score sentiment with OpenAI, store results in Postgres"
+requires-python = ">=3.12"
+dependencies = [
+    "alembic>=1.20.0",
+    "fastapi>=0.142.4",
+    "httpx>=0.28.1",
+    "openai>=3.26.0",
+    "psycopg[binary]>=3.3.6",
+    "pydantic-settings>=2.15.0",
+    "sqlalchemy>=2.1.4",
+    "uvicorn[standard]>=0.54.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "ruff>=0.16.10",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+markers = ["llm: calls the real OpenAI API (skipped without OPENAI_API_KEY; run with -m llm)"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI's dependency-injection style (`db: Session = Depends(get_db)`) is intentional
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Query"]

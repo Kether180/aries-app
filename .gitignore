@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+.venv/
+.pytest_cache/
+*.db
+
+# Node
+node_modules/
+dist/
+
+# Env / editor
+.env
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+*.log
+
+# Case study brief (not part of the app)
+*.pdf

@@ -1,4 +1,5 @@
 import logging
+import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -69,9 +70,16 @@ def unhandled_error_handler(request: Request, exc: Exception):
 @app.get("/api/health", tags=["meta"])
 def health():
     # The engine name (never the URL) makes a misconfigured DATABASE_URL visible from outside
-    url = settings.database_url
-    scheme = "unset" if url is None else ("empty" if not url else url.split(":", 1)[0][:12])
-    return {"status": "ok", "database": engine.dialect.name, "database_url_scheme": scheme}
+    raw = os.environ.get("DATABASE_URL")
+    if raw is None:
+        state = "unset"
+    elif not raw.strip():
+        state = "empty"
+    elif raw.startswith("${{"):
+        state = "unresolved reference"
+    else:
+        state = raw.split(":", 1)[0][:12]  # scheme only, never credentials
+    return {"status": "ok", "database": engine.dialect.name, "database_url": state}
 
 
 app.include_router(news.router)

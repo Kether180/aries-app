@@ -39,3 +39,7 @@ export const RESEARCH_EXAMPLES = [
   'What happened in the UK economy this week?',
   'Is the news about AI regulation positive or negative?',
 ]
+
+export function countryName(code: string): string {
+  return COUNTRIES.find(([c]) => c === code)?.[1] ?? code
+}

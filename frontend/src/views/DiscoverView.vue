@@ -5,32 +5,8 @@ import { api } from '@/api'
 import ArticleCard from '@/components/ArticleCard.vue'
 import SentimentBar from '@/components/SentimentBar.vue'
 import SentimentHelp from '@/components/SentimentHelp.vue'
+import { COUNTRIES, SENTIMENT_FILTERS, TOPICS } from '@/constants'
 import type { NewsSearchResult, Sentiment } from '@/types'
-
-const TOPICS = ['Artificial intelligence', 'Climate', 'Stock market', 'Elections', 'Space', 'Health']
-
-// GNews country codes; '' means worldwide
-const COUNTRIES = [
-  ['', 'Worldwide'],
-  ['us', 'United States'],
-  ['gb', 'United Kingdom'],
-  ['de', 'Germany'],
-  ['fr', 'France'],
-  ['es', 'Spain'],
-  ['it', 'Italy'],
-  ['nl', 'Netherlands'],
-  ['in', 'India'],
-  ['br', 'Brazil'],
-  ['au', 'Australia'],
-  ['ca', 'Canada'],
-] as const
-
-const FILTERS: { label: string; value: Sentiment | null }[] = [
-  { label: 'All', value: null },
-  { label: 'Positive', value: 'positive' },
-  { label: 'Neutral', value: 'neutral' },
-  { label: 'Negative', value: 'negative' },
-]
 
 const input = ref('')
 const country = ref('')
@@ -168,7 +144,7 @@ async function analyseAll() {
     <div v-if="analysed.length" class="toolbar-foot">
       <div class="segmented" role="group" aria-label="Show only">
         <button
-          v-for="f in FILTERS"
+          v-for="f in SENTIMENT_FILTERS"
           :key="f.label"
           :class="{ active: sentimentFilter === f.value }"
           @click="sentimentFilter = f.value"

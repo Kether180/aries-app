@@ -2,6 +2,7 @@
 import { onMounted, ref, watch } from 'vue'
 
 import { api } from '@/api'
+import { SENTIMENT_FILTERS } from '@/constants'
 import ArticleCard from '@/components/ArticleCard.vue'
 import AskPanel from '@/components/AskPanel.vue'
 import TopicMood from '@/components/TopicMood.vue'
@@ -11,13 +12,6 @@ import { formatScore } from '@/format'
 import type { Article, Sentiment, SentimentStats } from '@/types'
 
 const PAGE_SIZE = 20
-const FILTERS: { label: string; value: Sentiment | null }[] = [
-  { label: 'All', value: null },
-  { label: 'Positive', value: 'positive' },
-  { label: 'Neutral', value: 'neutral' },
-  { label: 'Negative', value: 'negative' },
-]
-
 const items = ref<Article[]>([])
 const total = ref(0)
 const stats = ref<SentimentStats | null>(null)
@@ -112,7 +106,7 @@ onMounted(() => {
   <div class="filters">
     <div class="segmented" role="group" aria-label="Filter by sentiment">
       <button
-        v-for="f in FILTERS"
+        v-for="f in SENTIMENT_FILTERS"
         :key="f.label"
         :class="{ active: sentiment === f.value }"
         @click="sentiment = f.value"

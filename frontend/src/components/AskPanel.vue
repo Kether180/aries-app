@@ -2,14 +2,9 @@
 import { ref } from 'vue'
 
 import { api } from '@/api'
+import { ASK_EXAMPLES } from '@/constants'
 import CitedAnswer from '@/components/CitedAnswer.vue'
 import type { AskResponse } from '@/types'
-
-const EXAMPLES = [
-  'What is the overall mood of the news?',
-  'What are the main stories about the economy?',
-  'Is there any good news?',
-]
 
 const question = ref('')
 const result = ref<AskResponse | null>(null)
@@ -53,7 +48,7 @@ async function ask(q: string) {
     </form>
 
     <div v-if="!result" class="chips">
-      <button v-for="ex in EXAMPLES" :key="ex" class="chip" :disabled="loading" @click="ask(ex)">{{ ex }}</button>
+      <button v-for="ex in ASK_EXAMPLES" :key="ex" class="chip" :disabled="loading" @click="ask(ex)">{{ ex }}</button>
     </div>
 
     <p v-if="error" class="error-box">{{ error }}</p>

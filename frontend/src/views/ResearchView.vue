@@ -2,15 +2,10 @@
 import { computed, onUnmounted, ref } from 'vue'
 
 import { ApiError, api } from '@/api'
+import { RESEARCH_EXAMPLES } from '@/constants'
 import CitedAnswer from '@/components/CitedAnswer.vue'
 import SentimentBadge from '@/components/SentimentBadge.vue'
 import type { ResearchResponse, ResearchStep, ResearchStepItem } from '@/types'
-
-const EXAMPLES = [
-  'How is Tesla doing this quarter?',
-  'What happened in the UK economy this week?',
-  'Is the news about AI regulation positive or negative?',
-]
 
 const TOOL_LABELS: Record<string, string> = {
   search_news: 'Searched the news',
@@ -121,7 +116,7 @@ function describe(step: ResearchStep): string {
     </form>
 
     <div v-if="!result && !loading && !steps.length" class="chips">
-      <button v-for="ex in EXAMPLES" :key="ex" class="chip" @click="research(ex)">{{ ex }}</button>
+      <button v-for="ex in RESEARCH_EXAMPLES" :key="ex" class="chip" @click="research(ex)">{{ ex }}</button>
     </div>
   </section>
 

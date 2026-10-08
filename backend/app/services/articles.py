@@ -132,24 +132,36 @@ STOPWORDS = {
 }
 
 
+# Words that carry no topic in a question ("what is the news saying about X?") but match almost
+# every summary, so they must not take part in retrieval
+QUESTION_FILLER = re.compile(
+    r"\b(news|say|says|saying|said|latest|recent|recently|anything|any|happening|happened|about|article|articles|"
+    r"story|stories|tell|know|coverage|report|reports|reporting|update|updates|today|week|this|there)\b",
+    re.I,
+)
+
+
 def search_relevant(db: Session, question: str, limit: int) -> Sequence[Article]:
     """Saved articles most relevant to `question`, best first.
 
     Postgres: full-text search over title, description, summary and search topic, ranked with
-    ts_rank_cd. Terms are OR-ed so a natural-language question still matches articles that
-    mention only some of its words. SQLite (local dev/tests): a simple keyword match.
+    ts_rank_cd. First every meaningful word must match (precise); if nothing matches, any word
+    may (broad). SQLite (local dev/tests): a simple keyword match.
     """
+    topic = QUESTION_FILLER.sub(" ", question).strip() or question
     if db.get_bind().dialect.name == "postgresql":
         document = search_document()
-        # plainto_tsquery stems and drops stopwords, giving 'a' & 'b'; swap & for | to match any term
-        tsquery = func.to_tsquery(
-            TS_CONFIG, func.replace(cast(func.plainto_tsquery(TS_CONFIG, question), Text), "&", "|")
-        )
-        rank = func.ts_rank_cd(document, tsquery)
-        stmt = select(Article).where(document.op("@@")(tsquery)).order_by(rank.desc(), Article.created_at.desc())
-        return db.scalars(stmt.limit(limit)).all()
+        all_terms = func.plainto_tsquery(TS_CONFIG, topic)  # stems and drops stopwords: 'a' & 'b'
+        any_term = func.to_tsquery(TS_CONFIG, func.replace(cast(all_terms, Text), "&", "|"))
+        for tsquery in (all_terms, any_term):
+            rank = func.ts_rank_cd(document, tsquery)
+            stmt = select(Article).where(document.op("@@")(tsquery)).order_by(rank.desc(), Article.created_at.desc())
+            rows = db.scalars(stmt.limit(limit)).all()
+            if rows:
+                return rows
+        return []
 
-    words = {w for w in re.findall(r"[a-z0-9]{4,}", question.lower()) if w not in STOPWORDS}
+    words = {w for w in re.findall(r"[a-z0-9]{4,}", topic.lower()) if w not in STOPWORDS}
     if not words:
         return []
     conditions = [col.ilike(f"%{w}%") for w in words for col in (Article.title, Article.summary, Article.query)]

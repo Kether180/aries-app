@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { computed, onMounted, reactive, ref } from 'vue'
 
 import { api } from '@/api'
 import ArticleCard from '@/components/ArticleCard.vue'
@@ -32,9 +31,6 @@ const FILTERS: { label: string; value: Sentiment | null }[] = [
   { label: 'Neutral', value: 'neutral' },
   { label: 'Negative', value: 'negative' },
 ]
-
-const route = useRoute()
-const router = useRouter()
 
 const input = ref('')
 const country = ref('')
@@ -76,20 +72,13 @@ async function load(q: string | null) {
   }
 }
 
-// The URL (?q=...&country=..) is the source of truth, so searches are linkable and back/forward works
-watch(
-  () => [route.query.q, route.query.country],
-  ([q, c]) => {
-    const value = typeof q === 'string' ? q : ''
-    input.value = value
-    country.value = typeof c === 'string' && COUNTRIES.some(([code]) => code === c) ? c : ''
-    load(value || null)
-  },
-  { immediate: true },
-)
+// Every page load starts clean on top headlines; searches are not kept in the URL
+onMounted(() => load(null))
 
 function search(q: string, c: string = country.value) {
-  router.push({ query: { ...(q.trim() ? { q: q.trim() } : {}), ...(c ? { country: c } : {}) } })
+  input.value = q.trim()
+  country.value = COUNTRIES.some(([code]) => code === c) ? c : ''
+  load(input.value || null)
 }
 
 function changeCountry(event: Event) {
@@ -145,6 +134,7 @@ async function analyseAll() {
     </p>
 
     <div class="chips">
+      <button class="chip" :class="{ active: !activeQuery }" @click="search('')">Top headlines</button>
       <button
         v-for="topic in TOPICS"
         :key="topic"
@@ -154,7 +144,6 @@ async function analyseAll() {
       >
         {{ topic }}
       </button>
-      <button v-if="activeQuery" class="chip" @click="search('')">✕ Top headlines</button>
     </div>
   </section>
 

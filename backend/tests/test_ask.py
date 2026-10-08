@@ -77,3 +77,32 @@ def test_ask_with_empty_library_skips_openai(client, fake_answer):
 
 def test_ask_validates_question(client):
     assert client.post("/api/ask", json={"question": "hi"}).status_code == 422
+
+
+@pytest.mark.skipif("postgresql" not in __import__("os").environ.get("TEST_DATABASE_URL", ""), reason="Postgres only")
+def test_postgres_retrieval_prefers_articles_matching_every_word(client, monkeypatch):
+    from app.db import SessionLocal
+    from app.services import articles as article_service
+
+    summaries = iter(
+        [
+            "The central bank raised interest rates to curb inflation.",
+            "ASML says next-generation chipmaking technology may be ready soon; the news cheered investors.",
+            "Scientists report that faith in technology lowers climate action; the news worried campaigners.",
+        ]
+    )
+
+    def fake(article):
+        return Analysis(summary=next(summaries), sentiment="neutral", sentiment_score=0.0, sentiment_reason="r")
+
+    monkeypatch.setattr(articles_router, "analyze_article", fake)
+    for i, title in enumerate(["Central bank raises interest rates", "ASML chip news", "Technology and climate"]):
+        client.post("/api/articles", json={"url": f"https://ex.com/{i}", "title": title, "query": "economy"})
+
+    with SessionLocal() as db:
+        # "news" and "saying" appear in two summaries but carry no topic: only the rates article must come back
+        found = article_service.search_relevant(db, "What is the news saying about interest rates?", limit=6)
+        assert [a.title for a in found] == ["Central bank raises interest rates"]
+        # Nothing matches every word: fall back to any word
+        found = article_service.search_relevant(db, "climate rates", limit=6)
+        assert {a.title for a in found} == {"Central bank raises interest rates", "Technology and climate"}

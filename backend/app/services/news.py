@@ -15,6 +15,7 @@ from app.services.errors import UpstreamError
 logger = logging.getLogger(__name__)
 
 BASE_URL = "https://gnews.io/api/v4"
+RETRY_AFTER_SECONDS = 1.2
 
 _cache: dict[tuple, tuple[float, list[NewsArticle]]] = {}
 
@@ -39,6 +40,11 @@ def fetch_news(query: str | None, lang: str = "en", max_results: int = 10) -> li
 
     try:
         response = httpx.get(f"{BASE_URL}/{endpoint}", params=params, timeout=10)
+        if response.status_code == 429:
+            # The free tier also allows only 1 request per second. One short retry covers a user
+            # clicking a topic right after the page loaded; the daily limit still surfaces as 429.
+            time.sleep(RETRY_AFTER_SECONDS)
+            response = httpx.get(f"{BASE_URL}/{endpoint}", params=params, timeout=10)
     except httpx.HTTPError as exc:
         logger.warning("GNews request failed: %s", exc)
         raise UpstreamError("gnews", f"request failed: {exc}") from exc

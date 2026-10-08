@@ -56,3 +56,19 @@ def test_missing_inline_markers_are_appended():
 
     none = finalize_citations(Answer(answer="No idea.", cited_sources=[]), source_count=2)
     assert none.answer == "No idea."
+
+
+def test_gnews_retries_once_on_per_second_limit(monkeypatch):
+    monkeypatch.setattr(news.settings, "gnews_api_key", "test-key")
+    monkeypatch.setattr(news.time, "sleep", lambda s: None)
+    news._cache.clear()
+    responses = iter(
+        [
+            SimpleNamespace(status_code=429, json=lambda: {}, headers={}, text="too fast"),
+            SimpleNamespace(status_code=200, json=lambda: {"articles": []}, headers={}, text=""),
+        ]
+    )
+    calls = []
+    monkeypatch.setattr(news.httpx, "get", lambda url, params, timeout: calls.append(url) or next(responses))
+    assert news.fetch_news("retry-me") == []
+    assert len(calls) == 2

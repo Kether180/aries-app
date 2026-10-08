@@ -158,7 +158,8 @@ const imageFailed = ref(false)
   margin-top: 12px;
 }
 @media (max-width: 600px) {
-  .card {
+  .card,
+  .card.has-thumb {
     grid-template-columns: 1fr;
   }
   .thumb {

@@ -5,6 +5,7 @@ import { api } from '@/api'
 import ArticleCard from '@/components/ArticleCard.vue'
 import AskPanel from '@/components/AskPanel.vue'
 import SentimentBar from '@/components/SentimentBar.vue'
+import SentimentHelp from '@/components/SentimentHelp.vue'
 import { formatScore } from '@/format'
 import type { Article, Sentiment, SentimentStats } from '@/types'
 
@@ -97,6 +98,7 @@ onMounted(() => {
         :selected="sentiment"
         @select="sentiment = $event"
       />
+      <SentimentHelp />
     </div>
   </section>
 

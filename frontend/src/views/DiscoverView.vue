@@ -5,6 +5,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { api } from '@/api'
 import ArticleCard from '@/components/ArticleCard.vue'
 import SentimentBar from '@/components/SentimentBar.vue'
+import SentimentHelp from '@/components/SentimentHelp.vue'
 import type { NewsSearchResult, Sentiment } from '@/types'
 
 const TOPICS = ['Artificial intelligence', 'Climate', 'Stock market', 'Elections', 'Space', 'Health']
@@ -133,6 +134,7 @@ async function analyseAll() {
       :selected="sentimentFilter"
       @select="sentimentFilter = $event"
     />
+    <SentimentHelp v-if="analysed.length" />
     <p v-else class="muted hint">Analyse articles to see how coverage of this topic leans.</p>
   </section>
 

@@ -6,6 +6,20 @@ import type { Sentiment } from '@/types'
 
 const props = defineProps<{ sentiment: Sentiment; score?: number }>()
 
+// Words instead of numbers: "Strongly negative" means more to a reader than "-0.60"
+const label = computed(() => {
+  if (props.sentiment === 'neutral' || props.score === undefined) return props.sentiment
+  const strength = Math.abs(props.score)
+  if (strength >= 0.65) return `Strongly ${props.sentiment}`
+  if (strength < 0.35) return `Slightly ${props.sentiment}`
+  return props.sentiment
+})
+
+const title = computed(() => {
+  if (props.score === undefined) return undefined
+  return `Tone score ${formatScore(props.score)} on a scale from -1 (very negative) to +1 (very positive)`
+})
+
 // Small meter: the fill starts at the centre and extends towards the score's side
 const meter = computed(() => {
   const s = props.score ?? 0
@@ -15,17 +29,10 @@ const meter = computed(() => {
 </script>
 
 <template>
-  <span
-    class="badge"
-    :class="sentiment"
-    :title="score !== undefined ? `Score ${formatScore(score)} (from -1 to +1)` : undefined"
-  >
+  <span class="badge" :class="sentiment" :title="title">
     <span class="dot" aria-hidden="true" />
-    <span class="label">{{ sentiment }}</span>
-    <template v-if="score !== undefined">
-      <span class="meter" aria-hidden="true"><span class="fill" :style="meter" /></span>
-      <span class="score">{{ formatScore(score) }}</span>
-    </template>
+    <span class="label">{{ label }}</span>
+    <span v-if="score !== undefined" class="meter" aria-hidden="true"><span class="fill" :style="meter" /></span>
   </span>
 </template>
 
@@ -39,10 +46,12 @@ const meter = computed(() => {
   border-radius: 999px;
   font-size: 0.78rem;
   font-weight: 600;
-  text-transform: capitalize;
   color: var(--tone);
   background: var(--tone-soft);
   white-space: nowrap;
+}
+.label::first-letter {
+  text-transform: uppercase;
 }
 .dot {
   width: 7px;
@@ -74,11 +83,6 @@ const meter = computed(() => {
   height: 100%;
   background: var(--tone);
   border-radius: 2px;
-}
-.score {
-  font-variant-numeric: tabular-nums;
-  font-weight: 500;
-  text-transform: none;
 }
 .positive {
   --tone: var(--positive);

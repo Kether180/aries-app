@@ -48,9 +48,9 @@ On the first request after a deploy, free hosting tiers can take 30 to 60 second
 2. Click the **Climate** chip. The URL changes to `/?q=Climate` and the cards reload. The chip is highlighted.
 3. On one card click **Summarise & score**. The button shows "Analysing..." for 1 to 3 seconds, then the card shows:
    - an "AI summary" block with 2 to 3 sentences
-   - a badge: Positive, Neutral or Negative, with a score between -1.00 and +1.00
-   - one italic sentence explaining the label
-4. The box above the cards now says "1/10 analysed" and shows a sentiment bar.
+   - a badge in words: Positive, Neutral or Negative, with "Strongly" or "Slightly" when the tone is clear or faint, and a small bar showing the same thing (hover it for the exact score)
+   - one sentence starting "Why positive:" (or neutral, negative) explaining the label
+4. The box above the cards now says "1/10 analysed" and shows a sentiment bar. Click **What do the labels mean?** under it for a plain-language explanation.
 5. Click **Analyse all**. The remaining cards analyse three at a time. When done, the box says "10/10 analysed" and the bar shows the split, for example "6 neutral (60%), 4 negative (40%)".
 6. Click **6 neutral** in the legend. Only neutral cards remain, the other bar segments dim, and a **Show all** link appears. Click it to reset.
 7. Reload the page. All cards still show their analysis (loaded from the database) and no new OpenAI calls are made.

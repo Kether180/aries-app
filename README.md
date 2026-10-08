@@ -68,7 +68,7 @@ Open http://localhost:8000. Migrations run on start. For a local Postgres: `dock
 - Filter by sentiment or text. Delete entries.
 - "Ask your library" answers questions from stored articles only, with sources cited.
 
-Each analysis: a 2 to 3 sentence summary, a label (positive / neutral / negative), a score from -1 to 1, and one sentence explaining the label.
+Each analysis: a 2 to 3 sentence summary, a label (positive / neutral / negative, shown in words such as "Strongly negative"), a score from -1 to 1 behind it, and one sentence explaining the label. A "What do the labels mean?" note explains the scale in plain language.
 
 ## AI features
 

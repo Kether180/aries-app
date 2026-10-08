@@ -62,7 +62,9 @@ const imageFailed = ref(false)
             <SentimentBadge :sentiment="analysis.sentiment" :score="analysis.sentiment_score" />
           </div>
           <p class="summary">{{ analysis.summary }}</p>
-          <p class="reason">{{ analysis.sentiment_reason }}</p>
+          <p class="reason">
+            <strong>Why {{ analysis.sentiment }}:</strong> {{ analysis.sentiment_reason }}
+          </p>
         </section>
       </Transition>
 
@@ -197,9 +199,12 @@ const imageFailed = ref(false)
 }
 .reason {
   margin: 0;
-  font-size: 0.85rem;
+  font-size: 0.86rem;
   color: var(--muted);
-  font-style: italic;
+}
+.reason strong {
+  color: var(--text);
+  font-weight: 600;
 }
 .error {
   margin: 8px 0 0;

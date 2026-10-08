@@ -16,7 +16,14 @@ defineEmits<{ analyze: []; delete: [] }>()
 
 <template>
   <article class="card" :class="{ analysed: analysis }">
-    <img v-if="article.image_url" :src="article.image_url" alt="" class="thumb" loading="lazy" />
+    <img
+      v-if="article.image_url"
+      :src="article.image_url"
+      alt=""
+      class="thumb"
+      loading="lazy"
+      @error="($event.target as HTMLImageElement).hidden = true"
+    />
 
     <div class="body">
       <p class="meta">
